@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Anannya AK | Data Science &amp; Software Engineering</title>
+    
+    <!-- External Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Local Stylesheet -->
+    <link href="index.css" rel="stylesheet"/>
+    
+    <!-- External JS Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                screens: {
+                    'sm': '480px',
+                    'md': '768px',
+                    'lg': '992px',
+                    'xl': '1200px',
+                    '2xl': '1440px'
+                },
+                extend: {
+                    colors: {
+                        "error-container": "#93000a",
+                        "secondary-container": "#00a6e0",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#340080",
+                        "primary": "#d0bcff",
+                        "on-secondary-container": "#00374d",
+                        "on-secondary": "#00354a",
+                        "surface": "#0d1322",
+                        "outline-variant": "#494454",
+                        "surface-container-lowest": "#080e1d",
+                        "on-secondary-fixed": "#001e2c",
+                        "tertiary": "#ddb7ff",
+                        "inverse-on-surface": "#2a3040",
+                        "tertiary-fixed-dim": "#ddb7ff",
+                        "on-surface": "#dde2f8",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-tertiary-container": "#400071",
+                        "on-tertiary": "#490080",
+                        "secondary": "#7bd0ff",
+                        "tertiary-fixed": "#f0dbff",
+                        "on-primary-fixed": "#23005c",
+                        "surface-tint": "#d0bcff",
+                        "surface-container-high": "#242a3a",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#e9ddff",
+                        "on-background": "#dde2f8",
+                        "on-primary-fixed-variant": "#5516be",
+                        "inverse-primary": "#6d3bd7",
+                        "primary-fixed-dim": "#d0bcff",
+                        "surface-variant": "#2f3445",
+                        "surface-container-highest": "#2f3445",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-primary": "#3c0091",
+                        "on-tertiary-fixed": "#2c0051",
+                        "outline": "#958ea0",
+                        "surface-bright": "#33394a",
+                        "on-surface-variant": "#cbc3d7",
+                        "surface-container-low": "#151b2b",
+                        "inverse-surface": "#dde2f8",
+                        "primary-container": "#a078ff",
+                        "surface-container": "#191f2f",
+                        "background": "#0d1322",
+                        "surface-dim": "#0d1322",
+                        "tertiary-container": "#b76dff",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-tertiary-fixed-variant": "#6900b3"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "container-max": "1280px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px",
+                        "margin-mobile": "20px",
+                        "unit": "8px"
+                    },
+                    fontFamily: {
+                        "label-caps": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "display-md": ["Space Grotesk"],
+                        "display-xl": ["Space Grotesk"],
+                        "display-sm": ["Space Grotesk"],
+                        "display-xl-mobile": ["Space Grotesk"],
+                        "code-md": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Space Grotesk"]
+                    },
+                    fontSize: {
+                        "label-caps": ["clamp(0.7rem, 1.2vw, 0.85rem)", { "lineHeight": "1.4", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-lg": ["clamp(1rem, 2vw, 1.125rem)", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-md": ["clamp(1.5rem, 4vw, 2.5rem)", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-xl": ["clamp(2.5rem, 6vw, 4.5rem)", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-sm": ["clamp(1.1rem, 2.5vw, 1.75rem)", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-xl-mobile": ["clamp(1.8rem, 5vw, 3rem)", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "code-md": ["clamp(0.75rem, 1.5vw, 0.875rem)", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "body-md": ["clamp(0.875rem, 1.8vw, 1rem)", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "display-lg": ["clamp(1.8rem, 5vw, 3.5rem)", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface">
+
+    <!-- Loading Screen -->
+    <div class="fixed inset-0 z-[100] bg-surface flex flex-col items-center justify-center gap-8" id="loader">
+        <div class="loader-ring"></div>
+        <h1 class="font-display-md text-display-md text-primary animate-pulse">Anannya AK</h1>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="cursor-dot"></div>
+    <div class="cursor-follower" id="cursor-ring"></div>
+
+    <!-- Background Shader -->
+    <canvas id="shader-canvas-ANIMATION_2" class="fixed inset-0 w-full h-full -z-10" style="display:block;width:100%;height:100%"></canvas>
+
+    <!-- Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 rounded-full mt-margin-mobile mx-margin-mobile md:mt-8 md:mx-auto max-w-fit bg-white/5 backdrop-blur-[18px] border border-white/10 shadow-xl">
+        <div class="flex items-center gap-8">
+            <span class="font-display-sm text-display-sm font-bold text-on-surface tracking-tighter">ANANNYA AK</span>
+            <nav class="hidden lg:flex items-center gap-6">
+                <a class="font-label-caps text-label-caps text-primary font-bold border-b-2 border-primary pb-1" href="#hero">Profile</a>
+                <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#about">About</a>
+                <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#experience">Experience</a>
+                <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#skills">Skills</a>
+                <a class="font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors duration-300" href="#contact">Contact</a>
+            </nav>
+        </div>
+        <a href="resume.pdf" target="_blank" class="hidden lg:inline-block ml-8 px-6 py-2 bg-primary-container text-on-primary-container rounded-full font-label-caps text-label-caps hover:scale-105 active:scale-95 transition-all">Resume</a>
+        <button class="hamburger-btn lg:hidden ml-8" id="hamburger-toggle" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </header>
+
+    <!-- Mobile Slide-Out Menu Drawer -->
+    <div class="mobile-nav-drawer lg:hidden" id="mobile-menu">
+        <a class="font-display-sm text-[24px] text-on-surface hover:text-primary transition-colors" href="#hero">Profile</a>
+        <a class="font-display-sm text-[24px] text-on-surface hover:text-primary transition-colors" href="#about">About</a>
+        <a class="font-display-sm text-[24px] text-on-surface hover:text-primary transition-colors" href="#experience">Experience</a>
+        <a class="font-display-sm text-[24px] text-on-surface hover:text-primary transition-colors" href="#skills">Skills</a>
+        <a class="font-display-sm text-[24px] text-on-surface hover:text-primary transition-colors" href="#contact">Contact</a>
+        <a class="px-8 py-3 bg-primary-container text-on-primary-container rounded-full font-label-caps text-label-caps hover:scale-105 active:scale-95 transition-all mt-4" href="resume.pdf" target="_blank">Resume</a>
+    </div>
+
+    <!-- Smooth Scroll Wrapper -->
+    <main id="main-content">
+        <div class="horizontal-container" id="scroll-wrapper">
+            <!-- Hero Section -->
+            <section class="horizontal-section relative overflow-hidden" id="hero">
+                <div class="max-w-container-max w-full grid grid-cols-1 lg:grid-cols-2 items-center gap-12 lg:gap-16 text-center lg:text-left">
+                    <div class="z-10 flex flex-col items-center lg:items-start">
+                        <p class="font-label-caps text-label-caps text-primary mb-4 tracking-[0.2em] uppercase">Anannya AK — CSE Student</p>
+                        <h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl leading-tight mb-6">
+                            Data Science &amp; <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Software Engineering</span>
+                        </h1>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant mb-8 lg:mb-10 max-w-xl">
+                            <span class="typing-text">Building high-performance ecosystems for the next generation of web experiences.</span>
+                        </p>
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-4 w-full">
+                            <a href="resume.pdf" target="_blank" class="px-6 py-3 lg:px-8 lg:py-4 bg-gradient-to-r from-primary-container to-secondary-container text-white rounded-xl font-display-sm text-label-caps tracking-widest uppercase hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all flex items-center gap-2">
+                                <span class="material-symbols-outlined">description</span> Resume
+                            </a>
+                            <a class="px-6 py-3 lg:px-8 lg:py-4 glass-panel text-on-surface rounded-xl font-display-sm text-label-caps tracking-widest uppercase hover:bg-white/10 transition-all flex items-center gap-2" href="https://github.com/Anannyaa97" target="_blank">
+                                <span class="material-symbols-outlined">code</span> GitHub
+                            </a>
+                            <a class="px-6 py-3 lg:px-8 lg:py-4 glass-panel text-on-surface rounded-xl font-display-sm text-label-caps tracking-widest uppercase hover:bg-white/10 transition-all flex items-center gap-2" href="https://www.linkedin.com/in/anannya-ak/" target="_blank">
+                                <span class="material-symbols-outlined">account_circle</span> LinkedIn
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex justify-center relative w-full">
+                        <!-- Profile Decorative Element -->
+                        <div class="relative w-full max-w-[280px] sm:max-w-[340px] md:max-w-[400px] lg:w-[450px] lg:h-[450px] aspect-square">
+                            <div class="absolute inset-0 bg-primary/20 rounded-full blur-[80px] animate-pulse"></div>
+                            <div class="glass-panel w-full h-full rounded-[40px] rotate-3 overflow-hidden border-2 border-white/20 p-4">
+                                <img alt="Anannya AK Profile Photo" class="w-full h-full object-cover rounded-[32px] grayscale hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJnxSF6oMhF7UeL10g98S34XzeFFjPtKU6PcMVfEFW_h4rKkk1FAJ6H6b7Y2qjTi-Pnxu5tGTsPt3Wav8o52sXqEdsqD9ZBffn4YwLRldzxBmBl40QdnNpcWGCGgtk_v-qqosc2eVb1niyCnKHqRnfsssfIw0N3YRHdkTUXH6P2k8_hKgEatOiz7_bdb9Y0gnA8gSjtBOwxVJPudlOr1GVRCOPSzuTWLJYSU2XI-LqflcUoJpOFVAtndt1_KaFtie4NnPZ5eChd7M"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- About Section -->
+            <section class="horizontal-section relative" id="about">
+                <div class="max-w-container-max w-full">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start text-center lg:text-left">
+                        <div class="lg:col-span-5 flex flex-col items-center lg:items-start w-full">
+                            <h2 class="font-display-lg text-display-lg mb-6 lg:mb-8">Academic Pulse.</h2>
+                            <div class="glass-panel p-6 md:p-8 rounded-3xl w-full flex flex-col items-center lg:items-start">
+                                <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-8">
+                                    I am a B.Tech student specializing in Computer Science and Engineering (Data Science). I thrive at the intersection of logical problem-solving and data-driven insights, with hands-on experience in software development and Python analysis.
+                                </p>
+                                <div class="space-y-6 flex flex-col items-center lg:items-start w-full">
+                                    <div class="flex flex-col sm:flex-row gap-4 items-center text-center sm:text-left w-full">
+                                        <div class="w-12 h-12 glass-panel rounded-full flex items-center justify-center text-primary shrink-0">
+                                            <span class="material-symbols-outlined">school</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-label-caps text-label-caps uppercase text-primary">B.Tech in CSE (Data Science)</h4>
+                                            <p class="text-on-surface-variant text-sm">St. Thomas College of Engineering, Kannur</p>
+                                            <p class="text-xs text-secondary">CGPA: 8.6/10 (Expected 2028)</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row gap-4 items-center text-center sm:text-left w-full">
+                                        <div class="w-12 h-12 glass-panel rounded-full flex items-center justify-center text-secondary shrink-0">
+                                            <span class="material-symbols-outlined">history_edu</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-label-caps text-label-caps uppercase text-secondary">Class XII - GHSS Chala</h4>
+                                            <p class="text-on-surface-variant text-sm">Graduated with 95%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-7 flex flex-col gap-6 items-center lg:items-start w-full">
+                            <div class="flex items-center gap-6 justify-center lg:justify-start w-full">
+                                <div class="w-16 h-1 bg-primary rounded-full hidden sm:block"></div>
+                                <h3 class="font-display-sm text-display-sm">Certifications</h3>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                                <div class="glass-panel p-6 rounded-2xl flex flex-col items-center sm:items-start">
+                                    <div class="flex justify-between items-start mb-4 w-full">
+                                        <span class="material-symbols-outlined text-primary">verified</span>
+                                        <span class="text-xs font-code-md text-on-surface-variant">IIT Bombay</span>
+                                    </div>
+                                    <h4 class="font-display-sm text-[18px] font-bold text-center sm:text-left">Python Training</h4>
+                                </div>
+                                <div class="glass-panel p-6 rounded-2xl flex flex-col items-center sm:items-start">
+                                    <div class="flex justify-between items-start mb-4 w-full">
+                                        <span class="material-symbols-outlined text-secondary">verified</span>
+                                        <span class="text-xs font-code-md text-on-surface-variant">NPTEL</span>
+                                    </div>
+                                    <h4 class="font-display-sm text-[18px] font-bold text-center sm:text-left">Python for Data Science</h4>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex items-center gap-6 justify-center lg:justify-start w-full">
+                                <div class="w-16 h-1 bg-tertiary rounded-full hidden sm:block"></div>
+                                <h3 class="font-display-sm text-display-sm">Languages</h3>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-4 w-full justify-center lg:justify-start">
+                                <div class="glass-panel px-6 py-3 rounded-xl border-l-4 border-l-primary w-full sm:max-w-xs flex flex-col items-center sm:items-start">
+                                    <span class="font-label-caps text-label-caps uppercase block">Malayalam</span>
+                                    <span class="text-xs text-on-surface-variant">Native Speaker</span>
+                                </div>
+                                <div class="glass-panel px-6 py-3 rounded-xl border-l-4 border-l-secondary w-full sm:max-w-xs flex flex-col items-center sm:items-start">
+                                    <span class="font-label-caps text-label-caps uppercase block">English</span>
+                                    <span class="text-xs text-on-surface-variant">Fluent Proficiency</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Experience Section -->
+            <section class="horizontal-section" id="experience">
+                <div class="max-w-container-max w-full flex flex-col items-center justify-center">
+                    <h2 class="font-display-lg text-display-lg mb-8 lg:mb-16 text-center">Internship Protocol.</h2>
+                    <div class="flex flex-col md:grid md:grid-cols-2 lg:flex lg:flex-row gap-6 lg:gap-8 pb-12 w-full justify-center items-stretch lg:overflow-x-auto lg:hide-scrollbar lg:snap-x">
+                        <div class="glass-panel p-6 md:p-8 lg:p-10 rounded-[24px] lg:rounded-[32px] w-full lg:min-w-[360px] lg:max-w-[400px] lg:snap-center hover:border-primary transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-6">
+                                    <span class="material-symbols-outlined text-primary text-4xl">terminal</span>
+                                    <span class="font-code-md text-code-md text-primary">June 2026</span>
+                                </div>
+                                <h3 class="font-display-sm text-display-sm mb-2">Software Dev Intern</h3>
+                                <p class="text-primary/70 font-label-caps text-[12px] mb-4 uppercase">Dinesh IT Systems</p>
+                                <ul class="text-on-surface-variant text-sm space-y-2 mb-8 list-disc list-inside text-left">
+                                    <li>Developed Database Migration Systems</li>
+                                    <li>Authored detailed SRS documentation</li>
+                                    <li>Enhanced UI for core enterprise systems</li>
+                                </ul>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-auto">
+                                <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-label-caps">DATABASE</span>
+                                <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-label-caps">UI/UX</span>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-6 md:p-8 lg:p-10 rounded-[24px] lg:rounded-[32px] w-full lg:min-w-[360px] lg:max-w-[400px] lg:snap-center hover:border-secondary transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-6">
+                                    <span class="material-symbols-outlined text-secondary text-4xl">analytics</span>
+                                    <span class="font-code-md text-code-md text-secondary">June 2025</span>
+                                </div>
+                                <h3 class="font-display-sm text-display-sm mb-2">Python &amp; Database Intern</h3>
+                                <p class="text-secondary/70 font-label-caps text-[12px] mb-4 uppercase">Neovent Innovations</p>
+                                <ul class="text-on-surface-variant text-sm space-y-2 mb-8 list-disc list-inside text-left">
+                                    <li>Python-based data analysis pipelines</li>
+                                    <li>Implemented Pandas, NumPy &amp; Matplotlib</li>
+                                    <li>Applied Machine Learning concepts</li>
+                                </ul>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-auto">
+                                <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-label-caps">PYTHON</span>
+                                <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-label-caps">ML</span>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-6 md:p-8 lg:p-10 rounded-[24px] lg:rounded-[32px] w-full lg:min-w-[360px] lg:max-w-[400px] lg:snap-center hover:border-tertiary transition-all flex flex-col justify-between md:col-span-2 md:max-w-md md:mx-auto lg:max-w-[400px] lg:mx-0">
+                            <div>
+                                <div class="flex justify-between items-start mb-6">
+                                    <span class="material-symbols-outlined text-tertiary text-4xl">deployed_code</span>
+                                    <span class="font-code-md text-code-md text-tertiary">Project Shell</span>
+                                </div>
+                                <h3 class="font-display-sm text-display-sm mb-2">Hotel Room Booking</h3>
+                                <p class="text-tertiary/70 font-label-caps text-[12px] mb-4 uppercase">Individual Development</p>
+                                <p class="text-on-surface-variant text-sm mb-8 text-left">Integrated management system built using Java Swing for the frontend and MySQL for secure data persistence.</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-auto">
+                                <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-label-caps">JAVA SWING</span>
+                                <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-label-caps">MYSQL</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Skills Section -->
+            <section class="horizontal-section relative" id="skills">
+                <div class="max-w-container-max w-full text-center">
+                    <h2 class="font-display-lg text-display-lg mb-4">Core Stack.</h2>
+                    <p class="text-on-surface-variant mb-12 lg:mb-16 max-w-2xl mx-auto">Mastering the intersection of aesthetics and logic through a curated stack of modern technologies.</p>
+                    <div class="flex flex-wrap justify-center gap-4 lg:gap-6 max-w-5xl mx-auto">
+                        <div class="glass-panel px-5 py-3 md:px-8 md:py-4 rounded-full flex items-center gap-2 md:gap-3 skill-pill cursor-default hover:scale-110 transition-transform">
+                            <span class="w-3 h-3 bg-primary rounded-full"></span>
+                            <span class="font-label-caps text-label-caps uppercase">Python / Java / C</span>
+                        </div>
+                        <div class="glass-panel px-5 py-3 md:px-8 md:py-4 rounded-full flex items-center gap-2 md:gap-3 skill-pill cursor-default hover:scale-110 transition-transform">
+                            <span class="w-3 h-3 bg-secondary rounded-full"></span>
+                            <span class="font-label-caps text-label-caps uppercase">MySQL / PostgreSQL</span>
+                        </div>
+                        <div class="glass-panel px-5 py-3 md:px-8 md:py-4 rounded-full flex items-center gap-2 md:gap-3 skill-pill cursor-default hover:scale-110 transition-transform">
+                            <span class="w-3 h-3 bg-tertiary rounded-full"></span>
+                            <span class="font-label-caps text-label-caps uppercase">Pandas / NumPy / Matplotlib</span>
+                        </div>
+                        <div class="glass-panel px-5 py-3 md:px-8 md:py-4 rounded-full flex items-center gap-2 md:gap-3 skill-pill cursor-default hover:scale-110 transition-transform">
+                            <span class="w-3 h-3 bg-primary rounded-full"></span>
+                            <span class="font-label-caps text-label-caps uppercase">HTML / CSS / JS</span>
+                        </div>
+                        <div class="glass-panel px-5 py-3 md:px-8 md:py-4 rounded-full flex items-center gap-2 md:gap-3 skill-pill cursor-default hover:scale-110 transition-transform">
+                            <span class="w-3 h-3 bg-secondary rounded-full"></span>
+                            <span class="font-label-caps text-label-caps uppercase">Git / GitHub / VS Code</span>
+                        </div>
+                        <div class="glass-panel px-5 py-3 md:px-8 md:py-4 rounded-full flex items-center gap-2 md:gap-3 skill-pill cursor-default hover:scale-110 transition-transform">
+                            <span class="w-3 h-3 bg-tertiary rounded-full"></span>
+                            <span class="font-label-caps text-label-caps uppercase">DSA / OOP / DBMS / OS</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Contact Section -->
+            <section class="horizontal-section" id="contact">
+                <div class="max-w-container-max w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center text-center lg:text-left">
+                    <div class="flex flex-col items-center lg:items-start w-full">
+                        <h2 class="font-display-lg text-display-lg mb-6 lg:mb-8">Initiate Protocol.</h2>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl">
+                            Ready to collaborate on data-driven projects or software solutions? Let's connect and define the next horizon of digital experience.
+                        </p>
+                        <div class="space-y-6 flex flex-col items-center lg:items-start w-full">
+                            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                                <div class="w-12 h-12 glass-panel rounded-full flex items-center justify-center text-primary shrink-0">
+                                    <span class="material-symbols-outlined">alternate_email</span>
+                                </div>
+                                <span class="font-code-md text-code-md">anannyaak01@gmail.com</span>
+                            </div>
+                            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                                <div class="w-12 h-12 glass-panel rounded-full flex items-center justify-center text-secondary shrink-0">
+                                    <span class="material-symbols-outlined">location_on</span>
+                                </div>
+                                <span class="font-code-md text-code-md">Kannur, Kerala, India</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-6 sm:p-10 rounded-[24px] sm:rounded-[40px] w-full max-w-lg lg:max-w-none mx-auto">
+                        <form class="space-y-6 text-left">
+                            <div>
+                                <label class="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-2">Full Name</label>
+                                <input class="w-full bg-surface-container-lowest border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface" placeholder="Your Name" type="text"/>
+                            </div>
+                            <div>
+                                <label class="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-2">Inquiry Type</label>
+                                <select class="w-full bg-surface-container-lowest border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface">
+                                    <option>Collaboration</option>
+                                    <option>Hiring Opportunity</option>
+                                    <option>Networking</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-label-caps text-label-caps uppercase text-on-surface-variant block mb-2">Message</label>
+                                <textarea class="w-full bg-surface-container-lowest border-outline-variant/30 rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface" rows="4"></textarea>
+                            </div>
+                            <button class="w-full py-4 bg-primary text-on-primary font-display-sm text-label-caps uppercase tracking-[0.2em] rounded-xl hover:shadow-[0_0_20px_rgba(208,188,255,0.4)] active:scale-[0.98] transition-all">Send Signal</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-8 md:py-12 px-6 md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-6 md:gap-gutter bg-surface-container-lowest border-t border-outline-variant/20 relative z-20 text-center md:text-left">
+        <span class="font-display-sm text-display-sm text-primary font-bold">Anannya AK</span>
+        <div class="flex flex-wrap justify-center gap-6 md:gap-8">
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="https://www.linkedin.com/in/anannya-ak/" target="_blank">LinkedIn</a>
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="https://github.com/Anannyaa97" target="_blank">GitHub</a>
+            <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="resume.pdf" target="_blank">Resume</a>
+        </div>
+        <p class="font-body-md text-body-md text-on-surface-variant">© 2026 Anannya AK. Specialized in Data Science.</p>
+    </footer>
+
+    <!-- WebGL Background Shader Code -->
+    <script>
+    (function() {
+      const canvas = document.getElementById('shader-canvas-ANIMATION_2');
+
+      function syncSize() {
+        const w = canvas.clientWidth  || window.innerWidth;
+        const h = canvas.clientHeight || window.innerHeight;
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w;
+          canvas.height = h;
+        }
+      }
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(syncSize).observe(canvas);
+      }
+      window.addEventListener('resize', syncSize);
+      syncSize();
+
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return;
+      const vs = `attribute vec2 a_position;
+    varying vec2 v_texCoord;
+    void main() {
+      v_texCoord = a_position * 0.5 + 0.5;
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }`;
+      const fs = `precision highp float;
+
+    uniform float u_time;
+    uniform vec2 u_resolution;
+    uniform vec2 u_mouse;
+
+    varying vec2 v_texCoord;
+
+    // Simplex noise function
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+    float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy) );
+        vec2 x0 = v -   i + dot(i, C.xx);
+        vec2 i1;
+        i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod289(i);
+        vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+        m = m*m ;
+        m = m*m ;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5);
+        vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+        vec3 g;
+        g.x  = a0.x  * x0.x  + h.x  * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+    }
+
+    void main() {
+        vec2 uv = v_texCoord;
+        vec2 mouse = u_mouse / u_resolution;
+        
+        // Background deep navy
+        vec3 color1 = vec3(0.043, 0.067, 0.125); // #0B1120
+        // Primary Violet
+        vec3 color2 = vec3(0.545, 0.361, 0.965); // #8B5CF6
+        // Secondary Cyan
+        vec3 color3 = vec3(0.220, 0.741, 0.973); // #38BDF8
+        // Accent Glow
+        vec3 color4 = vec3(0.659, 0.333, 0.969); // #A855F7
+
+        float n1 = snoise(uv * 2.0 + u_time * 0.05);
+        float n2 = snoise(uv * 3.0 - u_time * 0.075 + mouse * 0.3);
+        float n3 = snoise(uv * 1.5 + u_time * 0.025);
+
+        vec3 finalColor = color1;
+        
+        // Aurora effect blending
+        finalColor = mix(finalColor, color2, clamp(n1 * 0.5 + 0.5, 0.0, 1.0) * 0.35);
+        finalColor = mix(finalColor, color3, clamp(n2 * 0.5 + 0.5, 0.0, 1.0) * 0.25);
+        finalColor = mix(finalColor, color4, clamp(n3 * 0.5 + 0.5, 0.0, 1.0) * 0.15);
+
+        // Vignette
+        float dist = distance(uv, vec2(0.5));
+        finalColor *= 1.0 - dist * 0.4;
+
+        // Subtle grain
+        float grain = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+        finalColor += grain * 0.015;
+
+        gl_FragColor = vec4(finalColor, 1.0);
+    }`;
+
+      function cs(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+      }
+      const prog = gl.createProgram();
+      gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+      gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(prog);
+      gl.useProgram(prog);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+      const pos = gl.getAttribLocation(prog, 'a_position');
+      gl.enableVertexAttribArray(pos);
+      gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+      const uTime = gl.getUniformLocation(prog, 'u_time');
+      const uRes = gl.getUniformLocation(prog, 'u_resolution');
+      const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+      let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+      window.addEventListener('mousemove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          const nx = (event.clientX - rect.left) / rect.width;
+          const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+          mouse.x = nx * canvas.width;
+          mouse.y = ny * canvas.height;
+        }
+      });
+
+      function render(t) {
+        if (typeof ResizeObserver === 'undefined') syncSize();
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        if (uTime) gl.uniform1f(uTime, t * 0.001);
+        if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+        if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(render);
+      }
+      render(0);
+    })();
+    </script>
+
+    <!-- Layout & Smooth Scroll Script -->
+    <script>
+        // Smooth Scrolling with Lenis
+        const lenis = new Lenis();
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // GSAP Horizontal Scroll & Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        const sections = gsap.utils.toArray(".horizontal-section");
+        const scrollWrapper = document.querySelector("#scroll-wrapper");
+
+        let scrollTween = null;
+
+        const initHorizontalScroll = () => {
+            if (window.innerWidth >= 992) {
+                scrollTween = gsap.to(sections, {
+                    xPercent: -100 * (sections.length - 1),
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: "#scroll-wrapper",
+                        pin: true,
+                        scrub: 1,
+                        end: () => "+=" + scrollWrapper.offsetWidth,
+                    }
+                });
+            } else {
+                if (scrollTween) {
+                    scrollTween.scrollTrigger.kill();
+                    gsap.set(sections, { xPercent: 0 });
+                }
+            }
+        };
+
+        window.addEventListener("resize", initHorizontalScroll);
+        initHorizontalScroll();
+
+        // Hamburger Menu Toggle Interactive Logic
+        const hamburgerBtn = document.getElementById('hamburger-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+
+        const toggleMenu = () => {
+            hamburgerBtn.classList.toggle('open');
+            mobileMenu.classList.toggle('open');
+            if (mobileMenu.classList.contains('open')) {
+                document.body.style.overflowY = 'hidden';
+            } else {
+                document.body.style.overflowY = '';
+            }
+        };
+
+        if (hamburgerBtn && mobileMenu) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            // Close menu when clicking a link
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (mobileMenu.classList.contains('open')) {
+                        toggleMenu();
+                    }
+                });
+            });
+
+            // Close menu when clicking outside of it
+            document.addEventListener('click', (e) => {
+                if (mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                    toggleMenu();
+                }
+            });
+        }
+
+        // Custom Cursor Interaction
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorRing = document.getElementById('cursor-ring');
+
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0 });
+            gsap.to(cursorRing, { x: e.clientX - 16, y: e.clientY - 16, duration: 0.15 });
+        });
+
+        document.querySelectorAll('a, button, .skill-pill').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                gsap.to(cursorRing, { scale: 1.5, backgroundColor: 'rgba(208, 188, 255, 0.1)', duration: 0.3 });
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(cursorRing, { scale: 1, backgroundColor: 'transparent', duration: 0.3 });
+            });
+        });
+
+        // Typing Effect
+        const summaryText = "B.Tech student specializing in Computer Science and Engineering (Data Science) with hands-on internship experience in software development and Python-based data analysis.";
+        const textElement = document.querySelector('.typing-text');
+        if (textElement) {
+            textElement.innerHTML = '';
+            let i = 0;
+            function type() {
+                if (i < summaryText.length) {
+                    textElement.innerHTML += summaryText.charAt(i);
+                    i++;
+                    setTimeout(type, 30);
+                } else {
+                    textElement.classList.add('typing-cursor');
+                }
+            }
+            // Trigger typing after loader
+            setTimeout(type, 2500);
+        }
+
+        // Skill Pill Tilt Effect
+        document.querySelectorAll('.skill-pill').forEach(pill => {
+            pill.addEventListener('mousemove', (e) => {
+                const rect = pill.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 5;
+                const rotateY = (centerX - x) / 5;
+                gsap.to(pill, { rotateX, rotateY, duration: 0.3 });
+            });
+            pill.addEventListener('mouseleave', () => {
+                gsap.to(pill, { rotateX: 0, rotateY: 0, duration: 0.3 });
+            });
+        });
+
+        // Loader removal
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                gsap.to("#loader", { 
+                    opacity: 0, 
+                    duration: 1, 
+                    onComplete: () => {
+                        document.getElementById('loader').style.display = 'none';
+                    }
+                });
+            }, 2000);
+        });
+
+        // Section Active Navigation Update
+        sections.forEach((section, i) => {
+            ScrollTrigger.create({
+                trigger: section,
+                containerAnimation: scrollTween,
+                start: "left center",
+                end: "right center",
+                onToggle: self => {
+                    if (self.isActive) {
+                        const links = document.querySelectorAll('nav a');
+                        links.forEach(l => l.classList.remove('text-primary', 'font-bold', 'border-b-2', 'border-primary', 'pb-1'));
+                        if (links[i]) {
+                            links[i].classList.add('text-primary', 'font-bold', 'border-b-2', 'border-primary', 'pb-1');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
