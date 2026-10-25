@@ -86,7 +86,7 @@ export function Footer() {
         {/* Bottom Bar: Copyright on Left, Social Icons on Right */}
         <div className="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
           <div className="text-zinc-500 text-center sm:text-left">
-            © 2026 Anannya AK. All rights reserved. Built with React &amp; Kokonut UI.
+            © 2026 Anannya AK. All rights reserved. Built with React.
           </div>
 
           <div className="flex items-center gap-4">
