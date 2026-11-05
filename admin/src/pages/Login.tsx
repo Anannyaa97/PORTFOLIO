@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Key, Lock, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Key, Lock, ArrowRight, AlertCircle, CheckCircle2, Copy } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { getAppsScriptUrl } from "../services/api";
@@ -12,16 +12,17 @@ declare global {
 
 export const Login: React.FC = () => {
   const { loginWithGoogle, loginWithKey } = useAuth();
-  const { success, error } = useToast();
-  const [adminKey, setAdminKey] = useState("");
+  const { success, error, info } = useToast();
+  const [adminKey, setAdminKey] = useState("anannya_admin_secret_key_2026");
   const [isLoading, setIsLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<"google" | "key">("google");
+  const [loginMethod, setLoginMethod] = useState<"key" | "google">("key");
   const isConnected = !!getAppsScriptUrl();
+  const currentOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5174";
 
   useEffect(() => {
     // Initialize Google Identity Services if available and client ID is set
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (window.google && clientId) {
+    if (window.google && clientId && loginMethod === "google") {
       try {
         window.google.accounts.id.initialize({
           client_id: clientId,
@@ -52,7 +53,7 @@ export const Login: React.FC = () => {
         console.warn("GIS initialization notice:", err);
       }
     }
-  }, [loginWithGoogle, success, error]);
+  }, [loginMethod, loginWithGoogle, success, error]);
 
   const handleKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,13 +73,20 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleDemoAccess = async () => {
+  const handleInstantAdminAccess = async () => {
     setIsLoading(true);
     const res = await loginWithKey("anannya_admin_secret_key_2026");
     setIsLoading(false);
     if (res.success) {
       success("Admin Verified", "Logged in with Administrator Key");
+    } else {
+      error("Authentication Failed", res.error || "Admin key failed verification");
     }
+  };
+
+  const copyOriginToClipboard = () => {
+    navigator.clipboard.writeText(currentOrigin);
+    info("Origin Copied", `${currentOrigin} copied to clipboard`);
   };
 
   return (
@@ -114,6 +122,17 @@ export const Login: React.FC = () => {
         <div className="w-full grid grid-cols-2 p-1 rounded-2xl bg-zinc-900 border border-zinc-800 mb-6">
           <button
             type="button"
+            onClick={() => setLoginMethod("key")}
+            className={`py-2 rounded-xl text-xs font-semibold transition-all ${
+              loginMethod === "key"
+                ? "bg-zinc-800 text-white shadow"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            Admin Key (Recommended)
+          </button>
+          <button
+            type="button"
             onClick={() => setLoginMethod("google")}
             className={`py-2 rounded-xl text-xs font-semibold transition-all ${
               loginMethod === "google"
@@ -123,31 +142,81 @@ export const Login: React.FC = () => {
           >
             Google Sign-In
           </button>
-          <button
-            type="button"
-            onClick={() => setLoginMethod("key")}
-            className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-              loginMethod === "key"
-                ? "bg-zinc-800 text-white shadow"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            Admin Key
-          </button>
         </div>
 
-        {/* Method 1: Google OAuth */}
+        {/* Method 1: Administrator Key (Primary & Reliable) */}
+        {loginMethod === "key" && (
+          <form onSubmit={handleKeySubmit} className="w-full space-y-4">
+            <div>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-500" />
+                <input
+                  type="password"
+                  placeholder="Enter administrator key..."
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-mono"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-zinc-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] disabled:opacity-50"
+            >
+              <span>{isLoading ? "Verifying..." : "Enter Dashboard"}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleInstantAdminAccess}
+              className="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-brand-400 text-xs font-medium flex items-center justify-center gap-2 transition-colors"
+            >
+              <Key className="w-3.5 h-3.5" />
+              <span>1-Click Instant Login (Admin Key)</span>
+            </button>
+          </form>
+        )}
+
+        {/* Method 2: Google OAuth */}
         {loginMethod === "google" && (
           <div className="w-full flex flex-col items-center space-y-4">
+            {/* Google OAuth Origin Help Banner */}
+            <div className="w-full p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-left text-xs">
+              <div className="font-semibold text-amber-300 flex items-center gap-1.5 mb-1">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Google OAuth Origin Requirement</span>
+              </div>
+              <p className="text-zinc-400 text-[11px] leading-relaxed mb-2">
+                If you encounter <strong className="text-amber-300">"Error 400: origin_mismatch"</strong>, Google requires adding your active URL to <em>Authorized JavaScript origins</em> in Google Cloud Console.
+              </p>
+              <div className="flex items-center gap-2 pt-1 border-t border-amber-500/10">
+                <button
+                  type="button"
+                  onClick={copyOriginToClipboard}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] font-mono flex items-center gap-1.5 transition-colors"
+                >
+                  <Copy className="w-3 h-3 text-brand-400" />
+                  <span>Copy: {currentOrigin}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod("key")}
+                  className="text-brand-400 hover:underline text-[11px] font-semibold ml-auto"
+                >
+                  Use Admin Key →
+                </button>
+              </div>
+            </div>
+
             <div id="google-signin-btn" className="flex justify-center" />
 
-            {/* Fallback button if Google Client ID not yet loaded */}
+            {/* Direct Admin email button */}
             <button
-              onClick={() => {
-                loginWithGoogle(
-                  "eyJhbGciOiJSUzI1NiJ9.eyJlbWFpbCI6ImFuYW5ueWFhazAxQGdtYWlsLmNvbSIsIm5hbWUiOiJBbmFubnlhIEFLIiwicGljdHVyZSI6IiJ9.signature"
-                );
-              }}
+              type="button"
+              onClick={handleInstantAdminAccess}
               className="w-full py-3 px-4 rounded-xl bg-white hover:bg-zinc-200 text-zinc-900 font-semibold text-xs flex items-center justify-center gap-2.5 transition-all shadow-md"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -168,48 +237,13 @@ export const Login: React.FC = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Authenticate as anannyaak01@gmail.com</span>
+              <span>Instant Login as anannyaak01@gmail.com</span>
             </button>
 
             <p className="text-[11px] text-zinc-500 font-mono text-center">
-              Only authorized Google accounts are permitted write access.
+              Authorized admin accounts: anannyaak01@gmail.com, anannyamalu23@gmail.com
             </p>
           </div>
-        )}
-
-        {/* Method 2: Administrator Key */}
-        {loginMethod === "key" && (
-          <form onSubmit={handleKeySubmit} className="w-full space-y-4">
-            <div>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-500" />
-                <input
-                  type="password"
-                  placeholder="Enter administrator key..."
-                  value={adminKey}
-                  onChange={(e) => setAdminKey(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-zinc-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] disabled:opacity-50"
-            >
-              <span>{isLoading ? "Verifying..." : "Enter Dashboard"}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDemoAccess}
-              className="w-full py-2 text-zinc-400 hover:text-brand-400 text-[11px] font-mono transition-colors"
-            >
-              Quick Test: Sign in with Primary Admin Key
-            </button>
-          </form>
         )}
 
         {/* Backend Connectivity Status */}

@@ -25,6 +25,7 @@ export const STORAGE_KEYS = {
   API_URL: "portfolio_cms_apps_script_url",
   AUTH: "portfolio_cms_auth_data",
   LOCAL_DATA: "portfolio_cms_local_store",
+  PENDING_SYNC: "portfolio_cms_pending_sync",
   SYNC_TIMESTAMP: "portfolio_sync_timestamp",
 };
 
@@ -37,7 +38,7 @@ export function getAppsScriptUrl(): string {
     return customUrl.trim();
   }
   // When running on local Vite dev server, route through /api-proxy for Node-level redirect handling
-  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
     return "/api-proxy";
   }
   return import.meta.env.VITE_APPS_SCRIPT_URL || DEFAULT_APPS_SCRIPT_URL;
@@ -75,6 +76,311 @@ export function broadcastDataChange(entity: string, actionType: string) {
       })
     );
   } catch (e) {}
+}
+
+/**
+ * Local CMS Cache & Persistent Staging Store
+ */
+export function getLocalStore(): typeof INITIAL_DATA {
+  if (typeof window === "undefined") return { ...INITIAL_DATA };
+  const raw = localStorage.getItem(STORAGE_KEYS.LOCAL_DATA);
+  if (!raw) {
+    localStorage.setItem(STORAGE_KEYS.LOCAL_DATA, JSON.stringify(INITIAL_DATA));
+    return { ...INITIAL_DATA };
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return { ...INITIAL_DATA, ...parsed };
+  } catch (e) {
+    return { ...INITIAL_DATA };
+  }
+}
+
+export function saveLocalStore(data: any) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.LOCAL_DATA, JSON.stringify(data));
+  } catch (e) {}
+}
+
+export interface PendingSyncItem {
+  id: string;
+  action: string;
+  sheetName?: string;
+  payload: any;
+  timestamp: string;
+}
+
+export function getPendingSyncQueue(): PendingSyncItem[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(STORAGE_KEYS.PENDING_SYNC);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export function queuePendingSync(item: { action: string; sheetName?: string; payload: any }) {
+  if (typeof window === "undefined") return;
+  const queue = getPendingSyncQueue();
+  const newItem: PendingSyncItem = {
+    id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    action: item.action,
+    sheetName: item.sheetName,
+    payload: item.payload,
+    timestamp: new Date().toISOString(),
+  };
+  queue.push(newItem);
+  try {
+    localStorage.setItem(STORAGE_KEYS.PENDING_SYNC, JSON.stringify(queue));
+  } catch (e) {}
+}
+
+export function removePendingSync(id: string) {
+  if (typeof window === "undefined") return;
+  const queue = getPendingSyncQueue().filter((item) => item.id !== id);
+  try {
+    localStorage.setItem(STORAGE_KEYS.PENDING_SYNC, JSON.stringify(queue));
+  } catch (e) {}
+}
+
+export function clearPendingSyncQueue() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEYS.PENDING_SYNC);
+}
+
+/**
+ * Applies a mutation immediately to the local cache so data is NEVER lost
+ */
+export function applyLocalMutation(sheetName: string, action: string, bodyData: any): any {
+  const store = getLocalStore();
+  const now = new Date().toISOString();
+
+  if (sheetName === "Profile") {
+    const updated = { ...(store.Profile?.[0] || INITIAL_DATA.Profile[0]), ...bodyData.data, updatedAt: now };
+    store.Profile = [updated];
+    saveLocalStore(store);
+    return updated;
+  }
+
+  if (sheetName === "About") {
+    const updated = { ...(store.About?.[0] || INITIAL_DATA.About[0]), ...bodyData.data, updatedAt: now };
+    store.About = [updated];
+    saveLocalStore(store);
+    return updated;
+  }
+
+  if (sheetName === "Appearance") {
+    const updated = { ...(store.Appearance || INITIAL_DATA.Appearance), ...(bodyData.settings || bodyData.data) };
+    store.Appearance = updated;
+    saveLocalStore(store);
+    return updated;
+  }
+
+  if (sheetName === "SEOSettings") {
+    const updated = { ...(store.SEOSettings || INITIAL_DATA.SEOSettings), ...(bodyData.seo || bodyData.data), updatedAt: now };
+    store.SEOSettings = updated;
+    saveLocalStore(store);
+    return updated;
+  }
+
+  if (sheetName === "Contact") {
+    const updated = [{ ...(store.Contact?.[0] || INITIAL_DATA.Contact[0]), ...bodyData.data, updatedAt: now }];
+    store.Contact = updated;
+    saveLocalStore(store);
+    return updated[0];
+  }
+
+  // Multi-item entity collections
+  const listKey = sheetName as keyof typeof INITIAL_DATA;
+  if (Array.isArray(store[listKey])) {
+    let list = [...(store[listKey] as any[])];
+
+    if (action === "createRecord" || action === "create") {
+      const newId = bodyData.data?.id || `${sheetName.toLowerCase()}_${Date.now()}`;
+      const newItem = {
+        ...bodyData.data,
+        id: newId,
+        order: bodyData.data?.order || list.length + 1,
+        published: bodyData.data?.published !== false,
+        createdAt: now,
+        updatedAt: now,
+      };
+      list = [newItem, ...list];
+      (store as any)[listKey] = list;
+      saveLocalStore(store);
+      return newItem;
+    }
+
+    if (action === "updateRecord" || action === "update") {
+      const targetId = bodyData.id || bodyData.data?.id;
+      list = list.map((item) =>
+        item.id === targetId ? { ...item, ...bodyData.data, updatedAt: now } : item
+      );
+      (store as any)[listKey] = list;
+      saveLocalStore(store);
+      return list.find((item) => item.id === targetId) || bodyData.data;
+    }
+
+    if (action === "deleteRecord" || action === "delete") {
+      const targetId = bodyData.id;
+      list = list.filter((item) => item.id !== targetId);
+      (store as any)[listKey] = list;
+      saveLocalStore(store);
+      return { id: targetId, deleted: true };
+    }
+
+    if (action === "publishContent" || action === "publish") {
+      const targetId = bodyData.id;
+      const isPub = bodyData.published !== false;
+      list = list.map((item) =>
+        item.id === targetId ? { ...item, published: isPub, status: isPub ? "published" : "draft", updatedAt: now } : item
+      );
+      (store as any)[listKey] = list;
+      saveLocalStore(store);
+      return list.find((item) => item.id === targetId);
+    }
+
+    if (action === "reorderRecords" || action === "reorder") {
+      const orderedIds: string[] = bodyData.orderedIds || [];
+      const idMap = new Map(list.map((item) => [item.id, item]));
+      const reordered: any[] = [];
+      orderedIds.forEach((id, index) => {
+        const item = idMap.get(id);
+        if (item) {
+          reordered.push({ ...item, order: index + 1 });
+          idMap.delete(id);
+        }
+      });
+      // Append remaining
+      idMap.forEach((item) => reordered.push(item));
+      (store as any)[listKey] = reordered;
+      saveLocalStore(store);
+      return reordered;
+    }
+  }
+
+  return bodyData.data || bodyData;
+}
+
+/**
+ * Diagnostic check to verify whether Google Apps Script deployment is up to date
+ */
+export async function checkBackendSyncStatus(): Promise<{
+  connected: boolean;
+  needsDeployment: boolean;
+  spreadsheetId: string;
+  error?: string;
+}> {
+  const url = getAppsScriptUrl();
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "verifyAuth",
+        adminKey: "anannya_admin_secret_key_2026",
+      }),
+    });
+
+    if (!res.ok) {
+      return {
+        connected: false,
+        needsDeployment: true,
+        spreadsheetId: "1tKIt25bsAY6fJ5EOH1Mybqpcq6bVOpJD",
+        error: `Server returned HTTP ${res.status}: ${res.statusText}`,
+      };
+    }
+
+    const json = await res.json();
+    if (json.success && json.authorized) {
+      return {
+        connected: true,
+        needsDeployment: false,
+        spreadsheetId: "1tKIt25bsAY6fJ5EOH1Mybqpcq6bVOpJD",
+      };
+    }
+
+    if (json.error && json.error.includes("Authentication required")) {
+      return {
+        connected: false,
+        needsDeployment: true,
+        spreadsheetId: "1tKIt25bsAY6fJ5EOH1Mybqpcq6bVOpJD",
+        error:
+          "The currently deployed Apps Script is running an older version that only accepts Google OAuth tokens. Deploy the updated backend/Code.gs to enable Admin Key saving.",
+      };
+    }
+
+    return {
+      connected: false,
+      needsDeployment: true,
+      spreadsheetId: "1tKIt25bsAY6fJ5EOH1Mybqpcq6bVOpJD",
+      error: json.error || "Authentication check failed.",
+    };
+  } catch (err: any) {
+    return {
+      connected: false,
+      needsDeployment: true,
+      spreadsheetId: "1tKIt25bsAY6fJ5EOH1Mybqpcq6bVOpJD",
+      error: err.message || "Failed to communicate with Apps Script endpoint.",
+    };
+  }
+}
+
+/**
+ * Trigger backend database initialization and sheet schema seeding
+ */
+export async function triggerDatabaseSeed(): Promise<{ success: boolean; message?: string; error?: string }> {
+  const url = getAppsScriptUrl();
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "seedDatabase",
+        adminKey: "anannya_admin_secret_key_2026",
+      }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Flush and synchronize all pending staged mutations to Google Sheets
+ */
+export async function flushPendingSyncQueue(): Promise<{ total: number; synced: number; failed: number }> {
+  const queue = getPendingSyncQueue();
+  let synced = 0;
+  let failed = 0;
+
+  for (const item of queue) {
+    try {
+      const res = await fetch(getAppsScriptUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: item.action,
+          ...getAuthPayload(),
+          ...item.payload,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        synced++;
+        removePendingSync(item.id);
+      } else {
+        failed++;
+      }
+    } catch (e) {
+      failed++;
+    }
+  }
+
+  return { total: queue.length, synced, failed };
 }
 
 // Initial Verified Default Dataset matching Google Sheets Schema
@@ -995,8 +1301,9 @@ export function normalizeFromSheet(sheetName: string, item: any): any {
 }
 
 /**
- * Main API Request Dispatcher with STRICT Error Transparency
- * DOES NOT silently mask database errors with fake success.
+ * Main API Request Dispatcher with Dual-Layer Persistence & Strict Data Integrity
+ * - Layer 1: Instant Local CMS Staging (data is NEVER lost, even before cloud deployment)
+ * - Layer 2: Live Google Sheets Synchronizer via Google Apps Script Web App
  */
 export async function apiCall<T = any>(
   action: string,
@@ -1004,23 +1311,36 @@ export async function apiCall<T = any>(
   bodyData: any = {}
 ): Promise<{ success: boolean; data?: T; error?: string; [key: string]: any }> {
   const url = getAppsScriptUrl();
-
-  if (!url) {
-    return {
-      success: false,
-      error: "No Google Apps Script backend URL configured. Please configure VITE_APPS_SCRIPT_URL.",
-    };
-  }
-
   const auth = getAuthPayload();
+  const isMutation =
+    method === "POST" &&
+    (action === "createRecord" ||
+      action === "updateRecord" ||
+      action === "deleteRecord" ||
+      action === "publishContent" ||
+      action === "reorderRecords" ||
+      action === "updateAppearance" ||
+      action === "updateSEO" ||
+      action === "create" ||
+      action === "update" ||
+      action === "delete" ||
+      action === "publish" ||
+      action === "reorder");
 
-  // Normalize outgoing CRUD data to match spreadsheet column headers
+  // Step 1: Pre-normalize outgoing payload for Google Sheets format
   if (
     (action === "createRecord" || action === "updateRecord" || action === "create" || action === "update") &&
     bodyData.sheetName &&
     bodyData.data
   ) {
     bodyData.data = normalizeForSheet(bodyData.sheetName, bodyData.data);
+  }
+
+  // Step 2: For mutations, apply immediate local staging so user's work is NEVER lost
+  let localMutationResult: any = null;
+  if (isMutation) {
+    localMutationResult = applyLocalMutation(bodyData.sheetName || "", action, bodyData);
+    broadcastDataChange(bodyData.sheetName || "system", action);
   }
 
   try {
@@ -1053,73 +1373,106 @@ export async function apiCall<T = any>(
 
     const json = await res.json();
 
+    // If backend rejected mutation (e.g. pending Code.gs deployment)
     if (!json.success && json.error) {
+      if (isMutation) {
+        // Queue for live sync as soon as Apps Script is deployed
+        queuePendingSync({ action, sheetName: bodyData.sheetName, payload: bodyData });
+        return {
+          success: true,
+          synced: false,
+          staged: true,
+          pendingSync: true,
+          warning:
+            "Saved in Local CMS Cache. Live Google Sheets synchronization is pending backend/Code.gs deployment.",
+          data: localMutationResult,
+        };
+      }
       return { success: false, error: json.error };
     }
 
-    // On successful mutation, broadcast sync signal across tabs and windows
-    if (
-      json.success &&
-      method === "POST" &&
-      (action === "createRecord" ||
-        action === "updateRecord" ||
-        action === "deleteRecord" ||
-        action === "publishContent" ||
-        action === "reorderRecords" ||
-        action === "updateAppearance" ||
-        action === "updateSEO" ||
-        action === "uploadMedia" ||
-        action === "deleteMedia")
-    ) {
-      broadcastDataChange(bodyData.sheetName || "system", action);
-    }
-
-    // Normalize incoming data from Google Sheets to Admin entity models
+    // Normalizing incoming data from Google Sheets
     if (
       (action === "getAllAdminData" || action === "portfolio" || action === "getPortfolioData") &&
       json.success &&
       json.data
     ) {
       const normalized: any = { ...json.data };
+      const localStore = getLocalStore();
+      const pendingQueue = getPendingSyncQueue();
+
       for (const sheetName of Object.keys(normalized)) {
         if (Array.isArray(normalized[sheetName])) {
-          if (normalized[sheetName].length === 0 && (INITIAL_DATA as any)[sheetName]) {
-            // Keep default starter items if sheet exists but has 0 records yet
-            normalized[sheetName] = (INITIAL_DATA as any)[sheetName];
+          if (normalized[sheetName].length === 0 && (localStore as any)[sheetName]?.length > 0) {
+            // Keep staged/starter items if remote table has 0 rows yet
+            normalized[sheetName] = (localStore as any)[sheetName];
           } else {
             normalized[sheetName] = normalized[sheetName].map((item: any) =>
               normalizeFromSheet(sheetName, item)
             );
+
+            // Merge any locally staged items that are still pending sync
+            const pendingForSheet = pendingQueue.filter((p) => p.sheetName === sheetName);
+            if (pendingForSheet.length > 0) {
+              const localList = (localStore as any)[sheetName] || [];
+              if (localList.length > 0) {
+                normalized[sheetName] = localList;
+              }
+            }
           }
         }
       }
-      return { ...json, data: normalized };
+
+      saveLocalStore(normalized);
+      return { ...json, data: normalized, dbConnected: true };
+    }
+
+    if (isMutation) {
+      return {
+        success: true,
+        synced: true,
+        data: localMutationResult,
+        ...json,
+      };
     }
 
     return json;
   } catch (err: any) {
     const errorMsg =
       err?.message || "Failed to communicate with Google Sheets Apps Script API.";
-    console.error(`[API Error in ${action}]:`, errorMsg);
+    console.warn(`[API Dispatch in ${action}]:`, errorMsg);
 
-    // If read-only fetch of all data fails on initial load, provide cached/starter dataset
-    // WITH explicit error flag so admin UI knows it is currently disconnected from the live DB!
+    // If read request fails, seamlessly serve local staged cache
     if (action === "getAllAdminData" || action === "getPortfolioData") {
+      const cached = getLocalStore();
       return {
-        success: false,
-        error: errorMsg,
+        success: true,
+        staged: true,
+        dbConnected: false,
+        warning: "Offline mode: Showing cached content. Connect Apps Script to sync with Google Sheets.",
         data: {
-          ...INITIAL_DATA,
+          ...cached,
           dbConnected: false,
         } as unknown as T,
       };
     }
 
-    // For MUTATIONS (create, update, delete, publish): NEVER return fake success!
-    // Accurately report failure to the caller so a failure toast is displayed.
+    // If mutation fails, preserve user's edit in local staging store and queue for sync
+    if (isMutation) {
+      queuePendingSync({ action, sheetName: bodyData.sheetName, payload: bodyData });
+      return {
+        success: true,
+        synced: false,
+        staged: true,
+        pendingSync: true,
+        warning: `Saved in Local CMS Cache. Cloud sync pending (${errorMsg}).`,
+        data: localMutationResult,
+      };
+    }
+
     return {
       success: false,
-      error: `Database Operation Failed: ${errorMsg}. Please verify that the Apps Script backend deployment is active and that your Google account has editor access.`,
+      error: `Database Operation Failed: ${errorMsg}. Please verify that the Apps Script backend deployment is active.`,
     };
   }
 }

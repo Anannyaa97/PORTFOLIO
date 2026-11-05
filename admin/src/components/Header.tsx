@@ -10,6 +10,8 @@ interface HeaderProps {
   onOpenMobileMenu: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  onOpenSyncModal?: () => void;
+  pendingSyncCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +20,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMobileMenu,
   onRefresh,
   isRefreshing = false,
+  onOpenSyncModal,
+  pendingSyncCount = 0,
 }) => {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
@@ -48,17 +52,27 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Status, Refresh, Theme, Preview, Profile */}
       <div className="flex items-center gap-3">
-        {/* Backend Connectivity Status Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isConnected ? "bg-brand-400 animate-pulse" : "bg-amber-400"
-            }`}
-          />
-          <span className="text-zinc-400">
-            {isConnected ? "Google Sheets Connected" : "Local Store Active"}
+        {/* Backend Connectivity / Sync Hub Trigger */}
+        <button
+          onClick={onOpenSyncModal}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono transition-all hover:scale-[1.02] ${
+            pendingSyncCount > 0
+              ? "bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
+              : isConnected
+              ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-700"
+              : "bg-red-500/10 border-red-500/30 text-red-300"
+          }`}
+          title="Open Google Sheets Synchronization Hub"
+        >
+          <Database className={`w-3.5 h-3.5 ${pendingSyncCount > 0 ? "text-amber-400 animate-pulse" : "text-brand-400"}`} />
+          <span>
+            {pendingSyncCount > 0
+              ? `${pendingSyncCount} Staged (Sync Sheets)`
+              : isConnected
+              ? "Google Sheets Hub"
+              : "Sheets Disconnected"}
           </span>
-        </div>
+        </button>
 
         {/* Refresh button */}
         {onRefresh && (

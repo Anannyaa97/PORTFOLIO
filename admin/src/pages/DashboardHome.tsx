@@ -28,9 +28,16 @@ import { AdminSection } from "../components/Sidebar";
 interface DashboardHomeProps {
   stats: DashboardStats;
   onNavigate: (section: AdminSection) => void;
+  onOpenSyncModal?: () => void;
+  pendingSyncCount?: number;
 }
 
-export function DashboardHome({ stats, onNavigate }: DashboardHomeProps) {
+export function DashboardHome({
+  stats,
+  onNavigate,
+  onOpenSyncModal,
+  pendingSyncCount = 0,
+}: DashboardHomeProps) {
   const formattedLastUpdated = stats.lastUpdated
     ? new Date(stats.lastUpdated).toLocaleString("en-US", {
         month: "short",
@@ -45,6 +52,35 @@ export function DashboardHome({ stats, onNavigate }: DashboardHomeProps) {
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Cloud Sync Alert Banner if not fully deployed */}
+      {(!isConnected || pendingSyncCount > 0) && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-zinc-900 to-zinc-900 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg shadow-black/40">
+          <div className="flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <Database className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Google Sheets Live Synchronization Notice</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
+                  {pendingSyncCount > 0 ? `${pendingSyncCount} Changes Staged` : "Action Recommended"}
+                </span>
+              </h4>
+              <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                Changes saved through this Admin panel are safely preserved in your persistent CMS cache. To sync them directly to your live Google Sheet (<code>1tKIt25bsAY6fJ5EOH1Mybqpcq6bVOpJD</code>), deploy the updated <code>backend/Code.gs</code> version in Apps Script.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenSyncModal}
+            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shrink-0 transition-all shadow-md shadow-amber-500/20"
+          >
+            <span>Open Sync Hub</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-zinc-900 via-zinc-900 to-[#121b16] border border-zinc-800 shadow-xl overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="relative z-10 max-w-xl">

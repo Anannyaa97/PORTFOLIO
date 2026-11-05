@@ -25,7 +25,8 @@ import { AppearancePage } from "./pages/AppearancePage";
 import { WebsitePreviewPage } from "./pages/WebsitePreviewPage";
 import { ActivityLogPage } from "./pages/ActivityLogPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import { apiCall, INITIAL_DATA } from "./services/api";
+import { apiCall, INITIAL_DATA, getPendingSyncQueue } from "./services/api";
+import { SyncAssistantModal } from "./components/SyncAssistantModal";
 import { DashboardStats } from "./types";
 import { useToast } from "./context/ToastContext";
 
@@ -33,13 +34,16 @@ export function AppContent() {
   const { isAuthorized, logout, loading: authLoading } = useAuth();
   const [currentSection, setCurrentSection] = useState<AdminSection>("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [data, setData] = useState<any>(INITIAL_DATA);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const { error } = useToast();
 
   const loadData = useCallback(async () => {
     setIsRefreshing(true);
+    setPendingSyncCount(getPendingSyncQueue().length);
     try {
       const res = await apiCall("getAllAdminData", "GET");
       if (res.data) {
@@ -53,6 +57,7 @@ export function AppContent() {
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
+      setPendingSyncCount(getPendingSyncQueue().length);
     }
   }, []);
 
@@ -60,6 +65,13 @@ export function AppContent() {
     if (isAuthorized) {
       loadData();
     }
+
+    const handleSyncEvent = () => {
+      setPendingSyncCount(getPendingSyncQueue().length);
+    };
+
+    window.addEventListener("portfolio:synced", handleSyncEvent);
+    return () => window.removeEventListener("portfolio:synced", handleSyncEvent);
   }, [isAuthorized, loadData]);
 
   if (authLoading) {
@@ -138,11 +150,18 @@ export function AppContent() {
           onRefresh={loadData}
           isRefreshing={isRefreshing}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          onOpenSyncModal={() => setIsSyncModalOpen(true)}
+          pendingSyncCount={pendingSyncCount}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {currentSection === "dashboard" && (
-            <DashboardHome stats={stats} onNavigate={setCurrentSection} />
+            <DashboardHome
+              stats={stats}
+              onNavigate={setCurrentSection}
+              onOpenSyncModal={() => setIsSyncModalOpen(true)}
+              pendingSyncCount={pendingSyncCount}
+            />
           )}
 
           {currentSection === "profile" && (
@@ -303,6 +322,13 @@ export function AppContent() {
           {currentSection === "settings" && <SettingsPage onRefreshAllData={loadData} />}
         </main>
       </div>
+
+      {/* Google Sheets CMS Synchronization Hub Modal */}
+      <SyncAssistantModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        onSyncComplete={loadData}
+      />
     </div>
   );
 }

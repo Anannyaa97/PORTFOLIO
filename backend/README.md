@@ -64,3 +64,29 @@ curl -L "https://script.google.com/macros/s/AKfycbyg_38Pa8ZBj0iRCCYcColssYsOcVLH
 curl -L "https://script.google.com/macros/s/AKfycbyg_38Pa8ZBj0iRCCYcColssYsOcVLHLmfizVcWiPFMDtVguZUeVqldCnqeS32wZZofjQ/exec?action=verifyAuth&adminKey=anannya_admin_secret_key_2026"
 ```
 **Expected Response:** `{"success":true,"authorized":true,"email":"admin-key@authorized"}`
+
+---
+
+## 5. Resolving Google OAuth "Error 400: origin_mismatch"
+
+When attempting Google Sign-In with `anannyaak01@gmail.com` on `http://localhost:5174`, Google displays:
+> **Access blocked: Authorisation error**  
+> *Error 400: origin_mismatch*  
+> *If you're the app developer, register the JavaScript origin in the Google Cloud Console.*
+
+### Root Cause
+Google Identity Services strictly validates the browser's exact origin against the registered origins in Google Cloud Console. `http://localhost:5174` is currently not on that allowlist.
+
+### Fix (Takes 60 seconds):
+1. Go to **[Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials)**.
+2. Ensure you are in the project containing OAuth Client ID:
+   `1031335458105-6qfs0rqriufrrsbok7i0c39isnfgaeb9.apps.googleusercontent.com`.
+3. Click on the Client ID to edit it.
+4. Under **Authorized JavaScript origins**, click **+ ADD URI** and add:
+   - `http://localhost:5174`
+   - `http://localhost:5173`
+   - `http://localhost`
+   - Any production custom domain (e.g., `https://anannya-ak.onrender.com`)
+5. Click **SAVE** at the bottom. *(Note: Changes propagate in ~2 minutes).*
+
+> **Tip:** You do NOT need to wait for Google Cloud Console to log in! Simply use the **Admin Key** tab in the login page with key `anannya_admin_secret_key_2026` for immediate 1-click access.
