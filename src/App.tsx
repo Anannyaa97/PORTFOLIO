@@ -8,7 +8,6 @@ import { Skills } from "./components/Skills";
 import { Services } from "./components/Services";
 import { Education } from "./components/Education";
 import { Achievements } from "./components/Achievements";
-import { Testimonials } from "./components/Testimonials";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 import { MusicPlayer } from "./components/MusicPlayer";
@@ -38,17 +37,17 @@ function PortfolioMain() {
             aria-hidden="true"
           />
 
-          {/* Ambient Lighting Spots for Visual Depth */}
+          {/* Ambient Lighting Spots for Visual Depth (GPU-accelerated and optimized blur radii) */}
           <div
-            className="absolute top-24 left-1/4 w-[500px] h-[500px] bg-[#0B6E4F]/[0.08] rounded-full blur-[140px] pointer-events-none -z-10"
+            className="absolute top-24 left-1/4 w-[450px] h-[450px] bg-[#0B6E4F]/[0.08] rounded-full blur-[80px] pointer-events-none -z-10 will-change-transform"
             aria-hidden="true"
           />
           <div
-            className="absolute top-1/2 right-1/4 w-[600px] h-[600px] bg-[#50C878]/[0.05] rounded-full blur-[160px] pointer-events-none -z-10"
+            className="absolute top-1/2 right-1/4 w-[450px] h-[450px] bg-[#50C878]/[0.05] rounded-full blur-[90px] pointer-events-none -z-10 will-change-transform"
             aria-hidden="true"
           />
           <div
-            className="absolute bottom-48 left-1/3 w-[500px] h-[500px] bg-[#013220]/[0.15] rounded-full blur-[150px] pointer-events-none -z-10"
+            className="absolute bottom-48 left-1/3 w-[450px] h-[450px] bg-[#013220]/[0.15] rounded-full blur-[80px] pointer-events-none -z-10 will-change-transform"
             aria-hidden="true"
           />
 
@@ -74,9 +73,6 @@ function PortfolioMain() {
 
           {/* Achievements Section */}
           {appearance.showAchievements !== false && <Achievements />}
-
-          {/* Testimonials Section */}
-          {appearance.showTestimonials !== false && <Testimonials />}
 
           {/* Contact Section */}
           {appearance.showContact !== false && <Contact />}

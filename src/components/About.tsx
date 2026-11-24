@@ -52,6 +52,8 @@ export function About() {
                 <img
                   src={profileImageUrl}
                   alt={`${profile.name} - ${profile.title}`}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover object-center filter grayscale contrast-105 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-out"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = "none";

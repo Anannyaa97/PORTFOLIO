@@ -1,109 +1,12 @@
 'use client';
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent,
-  type ReactNode
-} from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import './GooeyNav.css';
 
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
-type Palette = 'dark' | 'light';
-type Size = 'sm' | 'md' | 'lg';
-type Rgba = number[];
-
-export interface GooeyNavItem {
-  label?: string;
-  href?: string;
-  icon?: ReactNode;
-}
-
-interface GooeyNavProps {
-  items?: GooeyNavItem[];
-  initialActiveIndex?: number;
-  activeIndex?: number;
-  onChange?: (index: number, item: GooeyNavItem) => void;
-  theme?: Palette;
-  color?: string;
-  activeTextColor?: string;
-  colors?: string[];
-  size?: Size;
-  frame?: boolean;
-  animationTime?: number;
-  particleCount?: number;
-  timeVariance?: number;
-  spread?: number;
-  gooeyness?: number;
-  wobble?: number;
-  hoverEffect?: boolean;
-  className?: string;
-  style?: CSSProperties;
-}
-
-interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-interface PillState {
-  mass: number;
-  scale: number;
-  velocity: number;
-  outgoing: number;
-}
-
-interface Drop {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  mass: number;
-  size: number;
-  given: number;
-  source: number;
-  index: number;
-  leave: number;
-  emerged: number;
-  absorbed: number;
-  state: 'waiting' | 'flying' | 'absorbing';
-  tint: Rgba | null;
-  start?: number;
-  duration?: number;
-  path?: number[];
-}
-
-interface Box {
-  cx: number;
-  cy: number;
-  hw: number;
-  hh: number;
-}
-
-interface Blob {
-  x: number;
-  y: number;
-  r: number;
-  tx: number;
-  ty: number;
-  tint: Rgba | null;
-}
-
-interface Pipeline {
-  program: WebGLProgram;
-  uniforms: Record<string, WebGLUniformLocation | null>;
-  buffer: WebGLBuffer;
-  position: number;
-}
-
-const THEMES: Record<Palette, Record<string, string>> = {
+const THEMES = {
   dark: {
     '--gn-frame': 'rgba(38, 35, 46, 0.66)',
     '--gn-frame-edge': 'rgba(255, 255, 255, 0.08)',
@@ -122,14 +25,14 @@ const THEMES: Record<Palette, Record<string, string>> = {
   }
 };
 
-const PILLS: Record<Palette, { color: string; hover: string; shadow: number }> = {
+const PILLS = {
   dark: { color: '#f4f4f5', hover: 'rgba(255, 255, 255, 0.08)', shadow: 0.4 },
   light: { color: '#27272a', hover: 'rgba(24, 24, 27, 0.06)', shadow: 0.2 }
 };
 
-const SIZES: Record<Size, string> = { sm: 'gooey-nav--sm', md: 'gooey-nav--md', lg: 'gooey-nav--lg' };
+const SIZES = { sm: 'gooey-nav--sm', md: 'gooey-nav--md', lg: 'gooey-nav--lg' };
 
-const DEFAULT_ITEMS: GooeyNavItem[] = [
+const DEFAULT_ITEMS = [
   { label: 'Home', href: '#' },
   { label: 'Work', href: '#' },
   { label: 'About', href: '#' },
@@ -214,8 +117,11 @@ void main() {
   float rim = (1.0 - smoothstep(0.0, 1.6, -d)) * max(0.0, -n.y) * 0.3;
   vec3 fill = mix(shape.rgb, vec3(1.0), rim) * (1.0 - 0.06 * max(0.0, n.y) * (1.0 - smoothstep(0.0, 6.0, -d)));
 
-  float lifted = field(p - vec2(0.0, 3.0)).w;
-  float shadow = (1.0 - smoothstep(-3.0, 9.0, lifted)) * uShadow * (1.0 - body);
+  float shadow = 0.0;
+  if (body < 0.99) {
+    float lifted = field(p - vec2(0.0, 3.0)).w;
+    shadow = (1.0 - smoothstep(-3.0, 9.0, lifted)) * uShadow * (1.0 - body);
+  }
 
   float hover = clamp(0.5 - sdPill(p, uHover) / aa, 0.0, 1.0) * uHoverColor.a;
 
@@ -226,7 +132,7 @@ void main() {
 }
 `;
 
-const parse = (value: string): Rgba => {
+const parse = value => {
   const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(value).trim());
   if (match) {
     const hex = match[1].length === 3 ? match[1].replace(/./g, digit => digit + digit) : match[1];
@@ -240,28 +146,28 @@ const parse = (value: string): Rgba => {
   return [1, 1, 1, 1];
 };
 
-const contrastInk = (rgb: Rgba) => (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] > 0.55 ? '#18161d' : '#ffffff');
+const contrastInk = rgb => (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] > 0.55 ? '#18161d' : '#ffffff');
 
-const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+const clamp01 = value => Math.min(1, Math.max(0, value));
 
-const travelEase = (t: number) => {
+const travelEase = t => {
   const x = clamp01(t);
   return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
 };
 
-const bezier = (a: number, b: number, c: number, d: number, t: number) => {
+const bezier = (a, b, c, d, t) => {
   const u = 1 - t;
   return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d;
 };
 
-const pillPath = (x: number, y: number, w: number, h: number) => {
+const pillPath = (x, y, w, h) => {
   if (w <= 0.5 || h <= 0.5) return '';
   const r = Math.min(w, h) / 2;
   return `M${x + r},${y}H${x + w - r}A${r},${r} 0 0 1 ${x + w},${y + r}V${y + h - r}A${r},${r} 0 0 1 ${x + w - r},${y + h}H${x + r}A${r},${r} 0 0 1 ${x},${y + h - r}V${y + r}A${r},${r} 0 0 1 ${x + r},${y}Z`;
 };
 
-const compile = (gl: WebGL2RenderingContext, type: number, source: string) => {
-  const shader = gl.createShader(type) as WebGLShader;
+const compile = (gl, type, source) => {
+  const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   return shader;
@@ -282,8 +188,8 @@ const UNIFORMS = [
   'uShadow'
 ];
 
-const build = (gl: WebGL2RenderingContext): Pipeline | null => {
-  const program = gl.createProgram() as WebGLProgram;
+const build = gl => {
+  const program = gl.createProgram();
   gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX));
   gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENT));
   gl.linkProgram(program);
@@ -292,7 +198,7 @@ const build = (gl: WebGL2RenderingContext): Pipeline | null => {
     return null;
   }
   const uniforms = Object.fromEntries(UNIFORMS.map(name => [name, gl.getUniformLocation(program, name)]));
-  const buffer = gl.createBuffer() as WebGLBuffer;
+  const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   return { program, uniforms, buffer, position: gl.getAttribLocation(program, 'aPosition') };
@@ -318,15 +224,15 @@ const GooeyNav = ({
   hoverEffect = true,
   className = '',
   style
-}: GooeyNavProps) => {
+}) => {
   const [innerIndex, setInnerIndex] = useState(initialActiveIndex);
   const current = Math.min(Math.max(0, activeIndex ?? innerIndex), Math.max(0, items.length - 1));
-  const stageRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
-  const overlayRef = useRef<HTMLUListElement>(null);
-  const fallbackRef = useRef<HTMLSpanElement>(null);
-  const engineRef = useRef<{ go: (index: number) => void; refresh: () => void } | null>(null);
+  const stageRef = useRef(null);
+  const canvasRef = useRef(null);
+  const listRef = useRef(null);
+  const overlayRef = useRef(null);
+  const fallbackRef = useRef(null);
+  const engineRef = useRef(null);
   const indexRef = useRef(current);
   indexRef.current = current;
   const palette = theme === 'light' ? 'light' : 'dark';
@@ -348,7 +254,7 @@ const GooeyNav = ({
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
-  const select = (index: number) => {
+  const select = index => {
     if (index === current) return;
     if (activeIndex === undefined) setInnerIndex(index);
     onChange?.(index, items[index]);
@@ -369,10 +275,10 @@ const GooeyNav = ({
     canvas.style.display = pipeline ? 'block' : 'none';
 
     const view = { width: 0, height: 0 };
-    let rects: Rect[] = [];
+    let rects = [];
     let target = -1;
-    const pills = new Map<number, PillState>();
-    const drops: Drop[] = [];
+    const pills = new Map();
+    const drops = [];
     const hover = { x: 0, y: 0, w: 0, h: 0, alpha: 0, index: -1 };
     const pillData = new Float32Array(MAX_PILLS * 4);
     const dropData = new Float32Array(MAX_DROPS * 4);
@@ -384,7 +290,7 @@ const GooeyNav = ({
 
     const measure = () => {
       const box = stage.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
       view.width = box.width;
       view.height = box.height;
       const outerWidth = box.width + MARGIN * 2;
@@ -407,61 +313,14 @@ const GooeyNav = ({
       });
     };
 
-    const trace = (boxes: Box[], blobs: Blob[], smooth: number) => {
-      const field = (x: number, y: number) => {
-        let d = 1e5;
-        const merge = (value: number) => {
-          const h = clamp01(0.5 + (0.5 * (value - d)) / smooth);
-          d = value + (d - value) * h - smooth * h * (1 - h);
-        };
-        for (const box of boxes) {
-          const r = Math.min(box.hw, box.hh);
-          const qx = Math.abs(x - box.cx) - box.hw + r;
-          const qy = Math.abs(y - box.cy) - box.hh + r;
-          merge(Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r);
-        }
-        for (const blob of blobs) {
-          const px = x - blob.x;
-          const py = y - blob.y;
-          const bx = -blob.tx;
-          const by = -blob.ty;
-          const span = bx * bx + by * by;
-          const h = span > 0.0001 ? clamp01((px * bx + py * by) / span) : 0;
-          const value = Math.hypot(px - bx * h, py - by * h) - blob.r;
-          if (value > d + smooth) continue;
-          merge(value);
-        }
-        return d;
-      };
-      const step = 2;
-      const parts: string[] = [];
-      for (let y = 0; y < view.height; y += 1) {
-        const cy = y + 0.5;
-        let previous = field(0, cy);
-        let start: number | null = previous < 0 ? 0 : null;
-        for (let x = step; x <= view.width + step; x += step) {
-          const value = field(Math.min(x, view.width), cy);
-          if (previous < 0 !== value < 0) {
-            const cross = x - step + (step * previous) / (previous - value);
-            if (value < 0) start = cross;
-            else if (start !== null) {
-              parts.push(`M${start.toFixed(1)},${y}H${cross.toFixed(1)}V${y + 1}H${start.toFixed(1)}Z`);
-              start = null;
-            }
-          }
-          previous = value;
-        }
-        if (start !== null) parts.push(`M${start.toFixed(1)},${y}H${view.width}V${y + 1}H${start.toFixed(1)}Z`);
-      }
-      return parts.join('');
-    };
+    const trace = () => '';
 
-    const pill = (index: number): PillState => {
+    const pill = index => {
       if (!pills.has(index)) pills.set(index, { mass: 0, scale: 0, velocity: 0, outgoing: 0 });
-      return pills.get(index) as PillState;
+      return pills.get(index);
     };
 
-    const shape = (index: number, amount: number): Rect | null => {
+    const shape = (index, amount) => {
       const rect = rects[index];
       if (!rect || amount <= 0.002) return null;
       const h = rect.h * Math.min(1.08, 0.42 + 0.58 * Math.sqrt(Math.max(0, amount)));
@@ -469,39 +328,37 @@ const GooeyNav = ({
       return { x: rect.x + rect.w / 2 - w / 2, y: rect.y + rect.h / 2 - h / 2, w, h };
     };
 
-    const plan = (drop: Drop, index: number, now: number, fresh: boolean) => {
+    const plan = (drop, index, now, fresh) => {
       const s = settingsRef.current;
       const rect = rects[index];
       if (!rect) return;
       const reach = Math.max(0, s.spread);
-      const ex = rect.x + rect.w / 2 + (Math.random() - 0.5) * rect.w * 0.2;
-      const ey = rect.y + rect.h / 2 + (Math.random() - 0.5) * rect.h * 0.15;
-      const dx = ex - drop.x;
-      const dirX = Math.sign(dx) || 1;
-      const dist = Math.hypot(dx, ey - drop.y);
-      const base = Math.max(0.1, s.animationTime / 1000);
+      const ex = rect.x + rect.w / 2 + (Math.random() - 0.5) * rect.w * 0.45;
+      const ey = rect.y + rect.h / 2 + (Math.random() - 0.5) * rect.h * 0.2;
+      const base = Math.max(0.15, s.animationTime / 1000);
       const variance = (Math.random() - 0.5) * (Math.max(0, s.timeVariance) / 1000);
-      const duration = Math.max(0.12, base * (0.7 + Math.random() * 0.25) + variance * 0.3);
-      const out = (Math.random() - 0.5) * Math.PI * 0.6;
-      const burst = Math.min(dist * 0.35, reach * (0.6 + Math.random() * 0.5));
-      const swing = Math.min(dist * 0.25, reach * (0.4 + Math.random() * 0.4));
-      const carry = Math.min(duration / 3, 0.08);
+      const duration = Math.max(0.15, base * (0.62 + Math.random() * 0.32) + variance * 0.6);
+      const out = Math.random() * Math.PI * 2;
+      const into = Math.random() * Math.PI * 2;
+      const burst = reach * (0.7 + Math.random() * 0.6);
+      const swing = reach * (0.55 + Math.random() * 0.55);
+      const carry = Math.min(duration / 3, 0.12);
       drop.index = index;
       drop.start = now;
       drop.duration = duration;
       drop.path = [
         drop.x,
         drop.y,
-        fresh ? drop.x + dirX * Math.cos(out) * burst : drop.x + drop.vx * carry,
-        fresh ? drop.y + Math.sin(out) * burst * 0.6 : drop.y + drop.vy * carry,
-        ex - dirX * Math.cos(out) * swing,
-        ey + Math.sin(out) * swing * 0.5,
+        fresh ? drop.x + Math.cos(out) * burst * 1.6 : drop.x + drop.vx * carry,
+        fresh ? drop.y + Math.sin(out) * burst * 1.6 : drop.y + drop.vy * carry,
+        ex + Math.cos(into) * swing * 1.5,
+        ey + Math.sin(into) * swing * 1.5,
         ex,
         ey
       ];
     };
 
-    const emit = (from: number, to: number, now: number) => {
+    const emit = (from, to, now) => {
       const s = settingsRef.current;
       const source = pills.get(from);
       const rect = rects[from];
@@ -538,8 +395,8 @@ const GooeyNav = ({
       const s = settingsRef.current;
       const height = rects[target]?.h ?? rects[0]?.h ?? 36;
       const smooth = height * (0.18 + 0.5 * clamp01(s.gooeyness));
-      const boxes: Box[] = [];
-      const blobs: Blob[] = [];
+      const boxes = [];
+      const blobs = [];
       for (const [index, state] of pills) {
         const box = shape(index, state.scale);
         if (box) boxes.push({ cx: box.x + box.w / 2, cy: box.y + box.h / 2, hw: box.w / 2, hh: box.h / 2 });
@@ -560,12 +417,13 @@ const GooeyNav = ({
         });
       }
 
-      const settledPill = boxes.length === 1 && !blobs.length;
-      if (settledPill) {
-        const box = boxes[0];
-        overlay.style.clipPath = `path('${pillPath(box.cx - box.hw, box.cy - box.hh, box.hw * 2, box.hh * 2)}')`;
+      if (boxes.length > 0) {
+        const pathStr = boxes
+          .map(box => pillPath(box.cx - box.hw, box.cy - box.hh, box.hw * 2, box.hh * 2))
+          .join(' ');
+        overlay.style.clipPath = `path('${pathStr}')`;
       } else {
-        overlay.style.clipPath = `path('${trace(boxes, blobs, smooth) || 'M0,0Z'}')`;
+        overlay.style.clipPath = 'none';
       }
       overlay.style.visibility = 'visible';
 
@@ -629,13 +487,13 @@ const GooeyNav = ({
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
 
-    const frame = (now: number) => {
+    const frame = now => {
       raf = 0;
       const s = settingsRef.current;
       const dt = Math.min(0.05, (now - last) / 1000 || 0);
       last = now;
-      const emergeTime = 0.05;
-      const absorbTime = 0.06;
+      const emergeTime = 0.09;
+      const absorbTime = 0.12;
 
       for (let i = drops.length - 1; i >= 0; i--) {
         const drop = drops[i];
@@ -653,18 +511,9 @@ const GooeyNav = ({
             source.outgoing = Math.max(0, source.outgoing - step);
             drop.given += step;
           }
-          const t = clamp01((now - (drop.start ?? now)) / 1000 / (drop.duration ?? 1));
+          const t = clamp01((now - drop.start) / 1000 / drop.duration);
           const eased = travelEase(t);
-          const [x0, y0, x1, y1, x2, y2, x3, y3] = drop.path ?? [
-            drop.x,
-            drop.y,
-            drop.x,
-            drop.y,
-            drop.x,
-            drop.y,
-            drop.x,
-            drop.y
-          ];
+          const [x0, y0, x1, y1, x2, y2, x3, y3] = drop.path;
           const x = bezier(x0, x1, x2, x3, eased);
           const y = bezier(y0, y1, y2, y3, eased);
           if (dt > 0) {
@@ -687,7 +536,7 @@ const GooeyNav = ({
       }
 
       const zeta = reduced ? 1 : 1 - 0.72 * clamp01(s.wobble);
-      const omega = 34;
+      const omega = 26;
       const steps = Math.max(1, Math.ceil(dt / (1 / 240)));
       const h = dt / steps;
       for (const [index, state] of pills) {
@@ -740,7 +589,7 @@ const GooeyNav = ({
       raf = requestAnimationFrame(frame);
     };
 
-    const settle = (index: number) => {
+    const settle = index => {
       pills.clear();
       drops.length = 0;
       target = index;
@@ -751,7 +600,7 @@ const GooeyNav = ({
       render();
     };
 
-    const go = (index: number, animate: boolean) => {
+    const go = (index, animate) => {
       if (index === target) return;
       if (!rects[index] || !animate || reduced || target < 0) {
         settle(index);
@@ -776,8 +625,8 @@ const GooeyNav = ({
       wake();
     };
 
-    const onOver = (event: PointerEvent) => {
-      const item = (event.target as Element).closest<HTMLElement>('[data-gooey-index]');
+    const onOver = event => {
+      const item = event.target.closest('[data-gooey-index]');
       if (!item || !list.contains(item)) return;
       const index = Number(item.dataset.gooeyIndex);
       const rect = rects[index];
@@ -848,7 +697,7 @@ const GooeyNav = ({
 
   const textColor = activeTextColor || contrastInk(pillRgb);
 
-  const labels = (interactive: boolean) =>
+  const labels = interactive =>
     items.map((item, index) => {
       const content = (
         <>
@@ -865,9 +714,9 @@ const GooeyNav = ({
       }
       const shared = {
         className: 'gooey-nav__link',
-        'aria-current': index === current ? ('page' as const) : undefined,
-        onClick: (event: MouseEvent) => {
-          if (!item.href || item.href.startsWith('#')) event.preventDefault();
+        'aria-current': index === current ? 'page' : undefined,
+        onClick: event => {
+          if (!item.href || item.href === '#' || item.href.startsWith('#')) event.preventDefault();
           select(index);
         }
       };
@@ -894,7 +743,7 @@ const GooeyNav = ({
   return (
     <nav
       className={`gooey-nav ${SIZES[size] ?? SIZES.md}${frame ? ' gooey-nav--framed' : ''} ${className}`.trim()}
-      style={{ ...THEMES[palette], '--gn-pill': pillColor, '--gn-active-ink': textColor, ...style } as CSSProperties}
+      style={{ ...THEMES[palette], '--gn-pill': pillColor, '--gn-active-ink': textColor, ...style }}
     >
       {frame && <span className="gooey-nav__rim" />}
       <div ref={stageRef} className="gooey-nav__stage">
@@ -912,3 +761,4 @@ const GooeyNav = ({
 };
 
 export default GooeyNav;
+

@@ -15,8 +15,8 @@ export interface FlowFieldProps {
   interactive?: boolean;
 }
 
-// Particles at density 1. Narrow screens get fewer.
-const BASE_COUNT = 700;
+// Optimized particle count for high responsiveness and low CPU/battery consumption
+const BASE_COUNT = 180;
 // Wind speed in px/s at speed 1, and the size of its bends (px).
 const WIND = 64;
 const NOISE_SCALE = 340;
@@ -593,8 +593,12 @@ export default function FlowField({
     let lastCleanup = 0;
     let visible = true;
 
-    const countFor = (w: number) =>
-      Math.round(BASE_COUNT * Math.max(density, 0) * (w < 520 ? 0.6 : 1));
+    const countFor = (w: number) => {
+      const isMobile = w < 640;
+      const isTablet = w < 1024;
+      const base = isMobile ? 65 : isTablet ? 110 : BASE_COUNT;
+      return Math.round(base * Math.max(density, 0));
+    };
 
     const paintStill = () => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -649,6 +653,10 @@ export default function FlowField({
         return;
       }
       raf = requestAnimationFrame(frame);
+      // Cap at 60fps to prevent burning CPU cycles on high refresh rate displays
+      if (now - lastStep < 16) {
+        return;
+      }
       if (!isActive() && now - lastStep < IDLE_FRAME_MS - 4) {
         return;
       }

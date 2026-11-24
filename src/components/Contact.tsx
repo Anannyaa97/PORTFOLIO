@@ -3,7 +3,6 @@ import { Mail, MapPin, Send, CheckCircle2, AlertCircle, Sparkles, Copy, Check } 
 import { GithubIcon as Github, LinkedinIcon as Linkedin } from "./icons";
 import { Button } from "./ui/button";
 import { usePortfolioData } from "@/context/PortfolioContext";
-import { submitContactMessage } from "@/lib/portfolioService";
 
 export function Contact() {
   const { data } = usePortfolioData();
@@ -27,7 +26,7 @@ export function Contact() {
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
@@ -43,21 +42,15 @@ export function Contact() {
       return;
     }
 
-    setStatus("submitting");
-
-    try {
-      const res = await submitContactMessage(formData);
-      if (res.success) {
-        setStatus("success");
-        setErrorMessage("");
-      } else {
-        setStatus("error");
-        setErrorMessage(res.error || "Could not register message. You can reach out directly via email.");
-      }
-    } catch (err: any) {
-      // Fallback
-      setStatus("success");
-    }
+    window.location.href = mailtoUrl;
+    setStatus("success");
+    setErrorMessage("");
+    setFormData({
+      name: "",
+      email: "",
+      inquiryType: "Collaboration",
+      message: "",
+    });
   };
 
   const mailtoUrl = `mailto:${primaryEmail}?subject=${encodeURIComponent(
