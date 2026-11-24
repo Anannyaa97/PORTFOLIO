@@ -1,51 +1,11 @@
 import React from "react";
-import { Briefcase, Calendar, CheckCircle, Terminal, Database, ArrowUpRight } from "lucide-react";
-
-interface ExperienceItem {
-  role: string;
-  company: string;
-  period: string;
-  type: string;
-  description: string[];
-  technologies: string[];
-  icon: React.ReactNode;
-  accent?: "emerald" | "mint" | "teal" | "cyan";
-}
-
-const EXPERIENCES: ExperienceItem[] = [
-  {
-    role: "Software Development Intern",
-    company: "Dinesh IT Systems",
-    period: "June 2026",
-    type: "Internship Protocol",
-    description: [
-      "Architected and implemented a high-performance Database Migration System connecting MySQL and PostgreSQL.",
-      "Conducted extensive testing, system debugging, and enterprise UI/UX enhancements across core systems.",
-      "Authored rigorous, comprehensive Software Requirements Specification (SRS) documentation.",
-      "Engineered automated validation routines ensuring 100% data integrity during schema transformations."
-    ],
-    technologies: ["Python", "PostgreSQL", "MySQL", "JavaScript", "HTML/CSS", "SRS Docs"],
-    icon: <Terminal className="w-5 h-5 text-[#50C878]" />,
-    accent: "emerald",
-  },
-  {
-    role: "Python for Database Intern",
-    company: "Neovent Innovations",
-    period: "June 2025",
-    type: "Internship Protocol",
-    description: [
-      "Engineered end-to-end Python data analysis pipelines utilizing Pandas, NumPy, and Matplotlib for analytical insights.",
-      "Developed preprocessing and feature engineering routines on structured and multi-source dataset streams.",
-      "Explored and implemented core Machine Learning models covering regression, classification, clustering, and PCA.",
-      "Designed visual dashboards and automated statistical summaries for data-informed decision making."
-    ],
-    technologies: ["Python", "Pandas", "NumPy", "Matplotlib", "Machine Learning", "Data Pipelines"],
-    icon: <Database className="w-5 h-5 text-[#D1F2EB]" />,
-    accent: "mint",
-  },
-];
+import { Briefcase, Calendar, Terminal, Database } from "lucide-react";
+import { usePortfolioData } from "@/context/PortfolioContext";
 
 export function Experience() {
+  const { data } = usePortfolioData();
+  const experiences = data.experience;
+
   return (
     <section id="experience" className="relative py-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-24">
       {/* Section Header */}
@@ -67,14 +27,18 @@ export function Experience() {
         {/* Subtle vertical spine for desktop */}
         <div className="hidden md:block absolute left-8 top-6 bottom-6 w-px bg-gradient-to-b from-[#50C878]/40 via-[#0B6E4F]/30 to-transparent pointer-events-none" />
 
-        {EXPERIENCES.map((item, index) => (
+        {experiences.map((item) => (
           <div
-            key={item.company}
+            key={item.id || item.company}
             className="relative md:pl-20 group transition-all duration-300"
           >
             {/* Timeline node icon */}
             <div className="hidden md:flex absolute left-4 top-6 -translate-x-1/2 w-9 h-9 rounded-full bg-[#121214] border border-white/20 items-center justify-center group-hover:scale-110 group-hover:border-[#50C878] transition-all z-10 shadow-[0_0_15px_rgba(0,0,0,0.8)]">
-              {item.icon}
+              {item.iconName === "Database" ? (
+                <Database className="w-5 h-5 text-[#D1F2EB]" />
+              ) : (
+                <Terminal className="w-5 h-5 text-[#50C878]" />
+              )}
             </div>
 
             {/* Experience Card */}
@@ -103,7 +67,7 @@ export function Experience() {
 
               {/* Responsibilities list */}
               <ul className="space-y-3 mb-6 text-sm sm:text-base text-zinc-300">
-                {item.description.map((point, i) => (
+                {(item.description || []).map((point, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#50C878] mt-2 shrink-0" />
                     <span className="leading-relaxed">{point}</span>
@@ -113,7 +77,7 @@ export function Experience() {
 
               {/* Technologies Badges */}
               <div className="flex flex-wrap gap-2 pt-2">
-                {item.technologies.map((tech) => (
+                {(item.technologies || []).map((tech) => (
                   <span
                     key={tech}
                     className="px-3 py-1 text-xs font-mono rounded-lg bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:border-[#50C878]/40 hover:text-[#D1F2EB] transition-colors"

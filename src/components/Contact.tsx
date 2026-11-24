@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import { Mail, MapPin, Send, CheckCircle2, AlertCircle, Sparkles, Copy, Check } from "lucide-react";
 import { GithubIcon as Github, LinkedinIcon as Linkedin } from "./icons";
 import { Button } from "./ui/button";
+import { usePortfolioData } from "@/context/PortfolioContext";
 
 export function Contact() {
+  const { data } = usePortfolioData();
+  const contact = data.contact;
+  const primaryEmail = contact.email || "anannyaak01@gmail.com";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,7 +21,7 @@ export function Contact() {
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText("anannyaak01@gmail.com");
+    navigator.clipboard.writeText(primaryEmail);
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };
@@ -30,7 +35,6 @@ export function Contact() {
       return;
     }
 
-    // Basic email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setStatus("error");
@@ -38,16 +42,18 @@ export function Contact() {
       return;
     }
 
-    setStatus("submitting");
-
-    // Client-side simulation with instant mailto preparation
-    setTimeout(() => {
-      setStatus("success");
-      setErrorMessage("");
-    }, 600);
+    window.location.href = mailtoUrl;
+    setStatus("success");
+    setErrorMessage("");
+    setFormData({
+      name: "",
+      email: "",
+      inquiryType: "Collaboration",
+      message: "",
+    });
   };
 
-  const mailtoUrl = `mailto:anannyaak01@gmail.com?subject=${encodeURIComponent(
+  const mailtoUrl = `mailto:${primaryEmail}?subject=${encodeURIComponent(
     `[Portfolio Inquiry - ${formData.inquiryType}] from ${formData.name || "Colleague"}`
   )}&body=${encodeURIComponent(
     `Name: ${formData.name}\nEmail: ${formData.email}\nInquiry Type: ${formData.inquiryType}\n\nMessage:\n${formData.message}`
@@ -90,10 +96,10 @@ export function Contact() {
                   <div className="overflow-hidden">
                     <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider">Email Address</div>
                     <a
-                      href="mailto:anannyaak01@gmail.com"
+                      href={`mailto:${primaryEmail}`}
                       className="text-sm font-mono text-zinc-200 hover:text-[#50C878] transition-colors truncate block"
                     >
-                      anannyaak01@gmail.com
+                      {primaryEmail}
                     </a>
                   </div>
                 </div>
@@ -116,7 +122,7 @@ export function Contact() {
                 <div>
                   <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider">Location</div>
                   <div className="text-sm font-medium text-zinc-200">
-                    Kannur, Kerala, India
+                    {contact.location || "Kannur, Kerala, India"}
                   </div>
                 </div>
               </div>
@@ -128,24 +134,22 @@ export function Contact() {
                 Network Profiles:
               </span>
               <div className="flex items-center gap-3">
-                <a
-                  href="https://github.com/Anannyaa97"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-zinc-300 hover:text-white hover:border-[#50C878]/50 transition-all"
-                >
-                  <Github className="w-4 h-4 text-[#50C878]" />
-                  GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/anannya-ak/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-zinc-300 hover:text-white hover:border-[#50C878]/50 transition-all"
-                >
-                  <Linkedin className="w-4 h-4 text-[#D1F2EB]" />
-                  LinkedIn
-                </a>
+                {data.socialLinks.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-zinc-300 hover:text-white hover:border-[#50C878]/50 transition-all"
+                  >
+                    {link.platform.toLowerCase().includes("git") ? (
+                      <Github className="w-4 h-4 text-[#50C878]" />
+                    ) : (
+                      <Linkedin className="w-4 h-4 text-[#D1F2EB]" />
+                    )}
+                    {link.platform}
+                  </a>
+                ))}
               </div>
             </div>
           </div>

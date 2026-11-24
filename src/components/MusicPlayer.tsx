@@ -12,8 +12,8 @@ import {
   ListMusic,
   Sparkles
 } from "lucide-react";
-import ElasticSlider from "./reactbits/ElasticSlider";
 import { getAssetUrl } from "@/lib/utils";
+import { usePortfolioData } from "@/context/PortfolioContext";
 
 export interface Track {
   id: string;
@@ -24,7 +24,7 @@ export interface Track {
   color: string;
 }
 
-const PLAYLIST: Track[] = [
+const DEFAULT_PLAYLIST: Track[] = [
   {
     id: "track-1",
     title: "Deep Focus Ambient (432Hz)",
@@ -59,6 +59,19 @@ function formatTime(seconds: number): string {
 }
 
 export function MusicPlayer({ className = "" }: { className?: string }) {
+  const { data } = usePortfolioData();
+  const PLAYLIST: Track[] =
+    data.music && data.music.length > 0
+      ? data.music.map((m) => ({
+          id: m.id,
+          title: m.title,
+          artist: m.artist,
+          category: m.category,
+          src: m.audioUrl.startsWith("http") ? m.audioUrl : getAssetUrl(m.audioUrl),
+          color: m.color || "#50C878",
+        }))
+      : DEFAULT_PLAYLIST;
+
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -79,12 +92,12 @@ export function MusicPlayer({ className = "" }: { className?: string }) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.src = currentTrack.src;
-    audio.load();
     setCurrentTime(0);
     setLoadError(false);
 
     if (isPlaying) {
+      audio.src = currentTrack.src;
+      audio.load();
       audio.play().catch((err) => {
         console.warn("Audio playback prevented or error:", err);
         setIsPlaying(false);
@@ -107,6 +120,10 @@ export function MusicPlayer({ className = "" }: { className?: string }) {
       audio.pause();
       setIsPlaying(false);
     } else {
+      if (!audio.src || !audio.src.endsWith(currentTrack.src)) {
+        audio.src = currentTrack.src;
+        audio.load();
+      }
       audio
         .play()
         .then(() => setIsPlaying(true))
@@ -364,19 +381,16 @@ export function MusicPlayer({ className = "" }: { className?: string }) {
           <span className="text-[11px] text-zinc-500">{isMuted ? "0%" : `${Math.round(volume)}%`}</span>
         </div>
 
-        {/* ElasticSlider integration */}
+        {/* Volume range slider */}
         <div className="w-full px-1">
-          <ElasticSlider
+          <input
+            type="range"
+            min="0"
+            max="100"
             value={isMuted ? 0 : volume}
-            defaultValue={70}
-            maxValue={100}
-            onChange={handleVolumeChange}
-            trackColor="rgba(255, 255, 255, 0.1)"
-            rangeColor="linear-gradient(90deg, #14b8a6, #06b6d4)"
-            thumbColor="#14b8a6"
-            thickness={6}
-            ariaLabel="Music Volume Control"
-            growOnHover={true}
+            onChange={(e) => handleVolumeChange(Number(e.target.value))}
+            className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#50C878] hover:bg-white/20 transition-colors"
+            aria-label="Music Volume Control"
           />
         </div>
       </div>

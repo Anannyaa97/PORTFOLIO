@@ -12,9 +12,14 @@ import {
   Cpu
 } from "lucide-react";
 import { GithubIcon as Github, LinkedinIcon as Linkedin } from "./icons";
+import { usePortfolioData } from "@/context/PortfolioContext";
 
 export function Hero() {
-  const resumeUrl = getAssetUrl("resume.pdf");
+  const { data } = usePortfolioData();
+  const profile = data.profile;
+  const resumeUrl = profile.resumeUrl?.startsWith("http")
+    ? profile.resumeUrl
+    : getAssetUrl(profile.resumeUrl || "resume.pdf");
 
   return (
     <section
@@ -39,7 +44,7 @@ export function Hero() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#50C878]"></span>
           </span>
           <span className="text-[11px] sm:text-xs font-mono font-medium tracking-wider uppercase text-zinc-300 truncate">
-            CSE Student — Data Science Specialization
+            {profile.availabilityStatus || "CSE Student — Data Science Specialization"}
           </span>
         </div>
 
@@ -47,18 +52,32 @@ export function Hero() {
         <h1 className="text-3xl sm:text-6xl md:text-7xl font-bold font-display tracking-tight text-white mb-6 leading-[1.1]">
           Hi, I'm{" "}
           <span className="bg-gradient-to-r from-[#D1F2EB] via-[#50C878] to-white bg-clip-text text-transparent">
-            Anannya AK
+            {profile.name || "Anannya AK"}
           </span>
         </h1>
 
         {/* Subtitle / Positioning */}
         <p className="text-lg sm:text-xl md:text-2xl text-zinc-300 font-display font-medium max-w-3xl mb-6 leading-snug">
-          Data Science &amp; <span className="text-[#50C878]">Software Engineering</span>
+          {profile.title ? (
+            profile.title.includes("&") ? (
+              <>
+                {profile.title.split("&")[0]} &amp;{" "}
+                <span className="text-[#50C878]">{profile.title.split("&")[1]}</span>
+              </>
+            ) : (
+              profile.title
+            )
+          ) : (
+            <>
+              Data Science &amp; <span className="text-[#50C878]">Software Engineering</span>
+            </>
+          )}
         </p>
 
         {/* Professional summary text */}
         <p className="text-sm sm:text-base md:text-lg text-zinc-400 max-w-2xl mb-10 leading-relaxed font-normal">
-          Building high-performance ecosystems at the intersection of logical problem-solving and data-driven insights. Hands-on experience in distributed big data pipelines, machine learning, and secure database architectures.
+          {profile.bio ||
+            "Building high-performance ecosystems at the intersection of logical problem-solving and data-driven insights. Hands-on experience in distributed big data pipelines, machine learning, and secure database architectures."}
         </p>
 
         {/* CTA Buttons */}
@@ -109,7 +128,9 @@ export function Hero() {
             </div>
             <div>
               <div className="text-xs text-zinc-400 font-mono">Specialization</div>
-              <div className="text-sm font-medium text-zinc-200">Data Science &amp; ML</div>
+              <div className="text-sm font-medium text-zinc-200">
+                {profile.specialization || "Data Science & ML"}
+              </div>
             </div>
           </div>
 
@@ -119,7 +140,9 @@ export function Hero() {
             </div>
             <div>
               <div className="text-xs text-zinc-400 font-mono">Academic Score</div>
-              <div className="text-sm font-medium text-zinc-200">CGPA: 8.6 / 10</div>
+              <div className="text-sm font-medium text-zinc-200">
+                {profile.academicScore || "CGPA: 8.6 / 10"}
+              </div>
             </div>
           </div>
 
@@ -129,7 +152,9 @@ export function Hero() {
             </div>
             <div>
               <div className="text-xs text-zinc-400 font-mono">Industry Experience</div>
-              <div className="text-sm font-medium text-zinc-200">2 Internships</div>
+              <div className="text-sm font-medium text-zinc-200">
+                {profile.industryExpCount || "2 Internships"}
+              </div>
             </div>
           </div>
         </div>
@@ -137,31 +162,24 @@ export function Hero() {
         {/* Social Links Bar */}
         <div className="flex items-center gap-4 text-zinc-400">
           <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">Connect:</span>
-          <a
-            href="https://github.com/Anannyaa97"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:border-[#50C878] hover:text-[#D1F2EB] hover:scale-110 active:scale-95 transition-all"
-            aria-label="GitHub Profile"
-          >
-            <Github className="w-4 h-4" />
-          </a>
-          <a
-            href="https://www.linkedin.com/in/anannya-ak/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:border-[#50C878] hover:text-[#D1F2EB] hover:scale-110 active:scale-95 transition-all"
-            aria-label="LinkedIn Profile"
-          >
-            <Linkedin className="w-4 h-4" />
-          </a>
-          <a
-            href="mailto:anannyaak01@gmail.com"
-            className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:border-[#50C878] hover:text-[#D1F2EB] hover:scale-110 active:scale-95 transition-all"
-            aria-label="Send Email"
-          >
-            <Mail className="w-4 h-4" />
-          </a>
+          {data.socialLinks.map((link) => (
+            <a
+              key={link.id}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2.5 rounded-full bg-white/5 border border-white/10 hover:border-[#50C878] hover:text-[#D1F2EB] hover:scale-110 active:scale-95 transition-all"
+              aria-label={link.label || link.platform}
+            >
+              {link.platform.toLowerCase().includes("git") ? (
+                <Github className="w-4 h-4" />
+              ) : link.platform.toLowerCase().includes("link") ? (
+                <Linkedin className="w-4 h-4" />
+              ) : (
+                <Mail className="w-4 h-4" />
+              )}
+            </a>
+          ))}
         </div>
       </div>
     </section>

@@ -1,9 +1,15 @@
-import { Mail, FileText, ArrowUp, Sparkles } from "lucide-react";
+import React from "react";
+import { Mail, FileText, ArrowUp } from "lucide-react";
 import { GithubIcon as Github, LinkedinIcon as Linkedin } from "./icons";
 import { getAssetUrl } from "@/lib/utils";
+import { usePortfolioData } from "@/context/PortfolioContext";
 
 export function Footer() {
-  const resumeUrl = getAssetUrl("resume.pdf");
+  const { data } = usePortfolioData();
+  const profile = data.profile;
+  const resumeUrl = profile.resumeUrl?.startsWith("http")
+    ? profile.resumeUrl
+    : getAssetUrl(profile.resumeUrl || "resume.pdf");
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -21,11 +27,11 @@ export function Footer() {
               </div>
             </div>
             <span className="text-xl sm:text-2xl font-bold font-display text-white tracking-wider">
-              ANANNYA AK
+              {profile.name || "ANANNYA AK"}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-zinc-400 font-mono">
-            B.Tech in CSE (Data Science) • Software Engineering
+            {profile.title || "B.Tech in CSE (Data Science) • Software Engineering"}
           </p>
         </div>
 
@@ -34,42 +40,15 @@ export function Footer() {
           aria-label="Footer Navigation"
           className="flex flex-wrap justify-center gap-6 sm:gap-8 text-sm font-medium mb-10"
         >
-          <a
-            href="#hero"
-            className="text-zinc-400 hover:text-[#50C878] transition-colors"
-          >
-            Home
-          </a>
-          <a
-            href="#about"
-            className="text-zinc-400 hover:text-[#50C878] transition-colors"
-          >
-            About
-          </a>
-          <a
-            href="#experience"
-            className="text-zinc-400 hover:text-[#50C878] transition-colors"
-          >
-            Experience
-          </a>
-          <a
-            href="#projects"
-            className="text-zinc-400 hover:text-[#50C878] transition-colors"
-          >
-            Projects
-          </a>
-          <a
-            href="#skills"
-            className="text-zinc-400 hover:text-[#50C878] transition-colors"
-          >
-            Skills
-          </a>
-          <a
-            href="#contact"
-            className="text-zinc-400 hover:text-[#50C878] transition-colors"
-          >
-            Contact
-          </a>
+          {data.navigation.map((item) => (
+            <a
+              key={item.id}
+              href={item.href}
+              className="text-zinc-400 hover:text-[#50C878] transition-colors"
+            >
+              {item.label}
+            </a>
+          ))}
           <a
             href={resumeUrl}
             target="_blank"
@@ -86,35 +65,29 @@ export function Footer() {
         {/* Bottom Bar: Copyright on Left, Social Icons on Right */}
         <div className="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
           <div className="text-zinc-500 text-center sm:text-left">
-            © 2026 Anannya AK. All rights reserved. Built with React.
+            © {new Date().getFullYear()} {profile.name || "Anannya AK"}. All rights reserved. Built with React.
           </div>
 
           <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/Anannyaa97"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-[#50C878]/40 hover:text-white transition-all"
-              aria-label="GitHub Profile"
-            >
-              <Github className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/anannya-ak/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-[#50C878]/40 hover:text-white transition-all"
-              aria-label="LinkedIn Profile"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-            <a
-              href="mailto:anannyaak01@gmail.com"
-              className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-[#50C878]/40 hover:text-white transition-all"
-              aria-label="Send Email"
-            >
-              <Mail className="w-4 h-4" />
-            </a>
+            {data.socialLinks.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-[#50C878]/40 hover:text-white transition-all"
+                aria-label={link.label || link.platform}
+              >
+                {link.platform.toLowerCase().includes("git") ? (
+                  <Github className="w-4 h-4" />
+                ) : link.platform.toLowerCase().includes("link") ? (
+                  <Linkedin className="w-4 h-4" />
+                ) : (
+                  <Mail className="w-4 h-4" />
+                )}
+              </a>
+            ))}
+
             <a
               href={resumeUrl}
               target="_blank"
